@@ -20,6 +20,8 @@
 
 > **⚠️ Alpha Release** - This is an alpha release with rapidly evolving APIs. Libraries will change significantly as we move toward production readiness, but the core architecture and design principles are stable. The intent is to make this library production-ready for enterprise VoIP deployments. We are in the process of doing real-world testing and would appreciate any feedback, feature requests, contributions, or bug reports.
 
+> **📌 Version Status**: This project currently has multiple session-core implementations (v1, v2, v3) in parallel development. **session-core-v3** is the recommended version for new projects. See [VERSION_STRATEGY.md](VERSION_STRATEGY.md) for details.
+
 ## 📋 Table of Contents
 
 - [🚀 Quick Start](#-quick-start)
@@ -30,6 +32,14 @@
 - [🧪 Testing & Quality](#-testing--quality)
 - [🏢 Enterprise Deployment](#-enterprise-deployment)
 - [📄 License](#-license)
+
+## 📚 Important Documentation
+
+- **[Project Health Dashboard](PROJECT_HEALTH.md)** - Current status and metrics
+- **[Version Strategy](VERSION_STRATEGY.md)** - Which session-core version to use
+- **[System Audit Report](SYSTEM_AUDIT_REPORT.md)** - Comprehensive code review
+- **[Missing Components](MISSING_COMPONENTS.md)** - What's planned but not yet built
+- **[Architecture Guide](LIBRARY_DESIGN_ARCHITECTURE.md)** - System design overview
 
 ---
 

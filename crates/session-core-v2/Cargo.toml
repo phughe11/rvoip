@@ -3,7 +3,7 @@ name = "rvoip-session-core-v2"
 version = "0.1.0"
 edition = "2021"
 authors = ["RVoIP Contributors"]
-description = "State table-based session coordination layer for RVoIP"
+description = "State table-based session coordination layer for RVoIP (Transitional version - use v3 for new projects)"
 license = "MIT OR Apache-2.0"
 
 [[example]]

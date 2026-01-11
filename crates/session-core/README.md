@@ -1,5 +1,7 @@
 # RVOIP Session Core
 
+> **⚠️ Maintenance Mode**: This is session-core v1, now in maintenance mode. For new projects, please use **session-core-v3**. See [VERSION_STRATEGY.md](../../VERSION_STRATEGY.md) for details.
+
 [![Crates.io](https://img.shields.io/crates/v/rvoip-session-core.svg)](https://crates.io/crates/rvoip-session-core)
 [![Documentation](https://docs.rs/rvoip-session-core/badge.svg)](https://docs.rs/rvoip-session-core)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
