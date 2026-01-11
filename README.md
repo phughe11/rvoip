@@ -22,6 +22,8 @@
 
 > **📌 Version Status**: This project currently has multiple session-core implementations (v1, v2, v3) in parallel development. **session-core-v3** is the recommended version for new projects. See [VERSION_STRATEGY.md](VERSION_STRATEGY.md) for details.
 
+> **🆕 January 2026 Update**: Major infrastructure improvements completed! CI/CD deployed, comprehensive documentation added, community governance established. [View all changes](FIXES_SUMMARY.md)
+
 ## 📋 Table of Contents
 
 - [🚀 Quick Start](#-quick-start)
