@@ -6,9 +6,9 @@
 use std::path::Path;
 use crate::error::{Error, Result};
 use crate::codec::audio::{G711Codec, AudioCodec};
-use crate::types::{AudioFrame, SampleRate};
-use hound::{WavReader, WavSpec};
-use tracing::{debug, info, warn};
+use crate::types::AudioFrame;
+use hound::WavReader;
+use tracing::{debug, info};
 
 /// Loaded WAV audio data
 #[derive(Debug, Clone)]

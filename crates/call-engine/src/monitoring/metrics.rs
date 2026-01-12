@@ -6,14 +6,13 @@
 
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
-use tracing::{info, debug, warn, error};
+use std::time::Duration;
+use tracing::{info, debug, warn};
 use chrono::{DateTime, Utc, TimeZone};
 use tokio::sync::RwLock;
 
 use crate::error::{CallCenterError, Result};
 use crate::orchestrator::CallCenterEngine;
-use crate::agent::AgentId;
 
 /// # Metrics Collector for Call Center Analytics
 ///

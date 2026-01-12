@@ -22,7 +22,7 @@
 use clap::{Arg, Command};
 use rvoip_session_core::{SessionCoordinator, SessionManagerBuilder, MediaControl, SessionControl};
 use rvoip_session_core::api::{
-    CallHandler, CallSession, CallState, IncomingCall, CallDecision, SessionId,
+    CallHandler, CallSession, CallState, IncomingCall, CallDecision,
 };
 use std::sync::Arc;
 use tokio::time::{sleep, Duration};

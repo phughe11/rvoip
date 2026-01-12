@@ -6,7 +6,6 @@
 
 use std::time::{Instant, Duration};
 use std::collections::VecDeque;
-use tracing::{debug, warn};
 
 use crate::api::error::MediaError;
 use super::feedback::{

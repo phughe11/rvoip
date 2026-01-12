@@ -1,6 +1,5 @@
 //! Media session management (moved from rtp-core)
 
-use std::collections::HashMap;
 use std::time::Instant;
 
 /// Configuration for a media session

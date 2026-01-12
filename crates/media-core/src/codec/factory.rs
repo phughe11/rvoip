@@ -3,7 +3,6 @@
 //! This module provides a factory for creating audio codec instances based on
 //! payload types and configuration parameters.
 
-use codec_core::codecs::g711::G711Variant;
 use crate::codec::audio::g711::G711Codec;
 use crate::codec::audio::common::AudioCodec;
 use crate::error::{Error, Result};

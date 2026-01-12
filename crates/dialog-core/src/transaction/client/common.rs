@@ -1,34 +1,13 @@
-/// # Common Client Transaction Functionality
-///
-/// This module provides common utility functions and traits used by both INVITE and non-INVITE
-/// client transactions as defined in RFC 3261 Section 17.1.
-///
-/// The common functionality includes:
-/// - Processing responses
-/// - Sending commands to the transaction's event loop
-/// - Accessing transaction state and data
-
-use std::fmt;
 use std::future::Future;
-use std::net::SocketAddr;
 use std::pin::Pin;
 use std::sync::Arc;
-use tokio::sync::{mpsc, Mutex};
-use tracing::{debug, error, trace, warn};
 
 use rvoip_sip_core::prelude::*;
-use rvoip_sip_transport::Transport;
 
-use async_trait::async_trait;
 
 use crate::transaction::client::{ClientTransaction, ClientTransactionData};
 use crate::transaction::error::{Error, Result};
-use crate::transaction::{
-    Transaction, TransactionState, TransactionKind, TransactionKey, TransactionEvent,
-    InternalTransactionCommand
-};
-use crate::transaction::timer::{TimerType, TimerSettings};
-use crate::transaction::utils;
+use crate::transaction::InternalTransactionCommand;
 
 /// Common functionality for all client transaction types.
 ///

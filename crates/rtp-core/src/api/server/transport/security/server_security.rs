@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, warn};
+use tracing::debug;
 use std::collections::HashMap;
 
 use crate::api::common::error::MediaTransportError;

@@ -9,7 +9,6 @@ use async_trait::async_trait;
 use dashmap::DashMap;
 use tokio::sync::{mpsc, broadcast, RwLock, OnceCell};
 use anyhow::Result;
-use serde::{Serialize, Deserialize};
 use tracing::{debug, info, warn, error};
 
 use crate::events::system::EventSystem;

@@ -5,8 +5,7 @@
 
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::{Mutex, RwLock};
-use tracing::{debug, warn, info, error};
+use tracing::debug;
 
 use crate::api::common::error::MediaTransportError;
 use crate::api::common::config::SecurityInfo;

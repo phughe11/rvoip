@@ -14,22 +14,18 @@
 /// to focus on higher-level transaction state management.
 
 use std::net::SocketAddr;
-use std::str::FromStr;
 use std::collections::HashMap;
-use std::sync::Arc;
 
 use tokio::sync::Mutex;
-use tokio::sync::mpsc;
-use tracing::{debug, error, info, warn};
+use tracing::debug;
 
 use rvoip_sip_core::prelude::*;
-use rvoip_sip_core::{Host, TypedHeader};
+use rvoip_sip_core::TypedHeader;
 
-use crate::transaction::error::{self, Error, Result};
-use crate::transaction::{TransactionKey, Transaction};
+use crate::transaction::error::{Error, Result};
+use crate::transaction::TransactionKey;
 use crate::transaction::client::ClientTransaction;
 use crate::transaction::client::TransactionExt as ClientTransactionExt;
-use crate::transaction::server::TransactionExt as ServerTransactionExt;
 
 /// Extensions for response building to ensure RFC 3261 compliance.
 ///

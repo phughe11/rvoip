@@ -15,27 +15,20 @@ use parking_lot::RwLock as ParkingRwLock;
 use rvoip_client_core::{
     Client as CoreClient,
     ClientBuilder as CoreClientBuilder,
-    ClientEventHandler,
-    error::ClientError,
 };
 use rvoip_audio_core::{
     AudioDeviceManager,
     pipeline::AudioPipelineBuilder,
     AudioFormat,
     AudioFrame,
-    AudioDirection,
-    AudioDeviceInfo,
 };
-use rvoip_session_core::{types::AudioFrame as SessionAudioFrame, SessionId};
-use codec_core::CodecType;
 use std::{
     sync::Arc,
     collections::HashMap,
 };
-use tokio::sync::{Mutex, RwLock, mpsc, oneshot};
+use tokio::sync::{Mutex, RwLock, mpsc};
 use tokio_stream::{Stream, StreamExt};
-use futures::stream::BoxStream;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info};
 
 /// Advanced SIP client with full control over audio pipeline and media
 pub struct AdvancedSipClient {

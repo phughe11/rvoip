@@ -1,12 +1,11 @@
 use std::net::SocketAddr;
-use std::sync::Arc;
 use futures_util::StreamExt;
 use futures_util::stream::SplitStream;
 use tokio::net::{TcpListener, TcpStream};
-use tracing::{debug, error, info, trace, warn};
+use tracing::{debug, error, info};
 
 #[cfg(feature = "ws")]
-use tokio_tungstenite::{accept_async, tungstenite, WebSocketStream, MaybeTlsStream};
+use tokio_tungstenite::{tungstenite, WebSocketStream, MaybeTlsStream};
 #[cfg(feature = "ws")]
 use tokio_tungstenite::tungstenite::handshake::server::{Request, Response};
 #[cfg(feature = "ws")]

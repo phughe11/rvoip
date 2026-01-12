@@ -6,11 +6,8 @@
 //! structures.
 
 use std::collections::HashMap;
-use bytes::Bytes;
 
-use crate::packet::extension::{RtpHeaderExtensions, ExtensionElement};
-use crate::error::Error;
-use crate::Result;
+use crate::packet::extension::RtpHeaderExtensions;
 
 // Re-export the ExtensionFormat enum directly from the packet layer
 pub use crate::packet::extension::ExtensionFormat;

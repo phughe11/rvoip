@@ -1,186 +1,153 @@
 # Missing Components Status and Implementation Plan
 
-**Last Updated**: January 11, 2026  
-**Purpose**: Track status of planned but not yet implemented components
+**Last Updated**: January 12, 2026  
+**Purpose**: Track status of planned and partially implemented components
 
 ---
 
 ## Overview
 
-Based on the architecture design documents, the following critical components are planned but not yet implemented. This document serves as a tracking mechanism and prevents confusion about what's available vs. what's documented.
+This document tracks the implementation status of enterprise components. Several components that were previously marked as "not implemented" have now been scaffolded and partially implemented.
+
+> **Note**: This document was updated on January 12, 2026 to reflect actual code status after a deep audit.
 
 ---
 
-## 🔴 Critical Priority Components
+## 🟡 Partially Implemented Components
 
-### 1. b2bua-core ❌ NOT IMPLEMENTED
+### 1. b2bua-core ⚠️ PARTIALLY IMPLEMENTED
 
-**Status**: Not Started  
-**Priority**: 🔴 Critical  
-**Blocking**: Call center deployments, IVR systems  
+**Status**: ~60% Complete  
+**Priority**: 🟡 Medium (basic functionality exists)  
 **Design Document**: [B2BUA_IMPLEMENTATION_PLAN.md](B2BUA_IMPLEMENTATION_PLAN.md) (744 lines)
 
-**Planned Features**:
-- Back-to-back User Agent core functionality
-- Dialog pair management (leg-a, leg-b)
+**Implemented Features** ✅:
+- B2buaEngine with UnifiedDialogManager integration
+- Leg A / Leg B dialog pair management
+- Transparent SDP bridging
+- Event handling (CallEstablished, CallTerminated)
+- SBC integration via `process_invite()`
+- Hangup propagation between legs
+
+**Not Yet Implemented** 🚧:
 - Call interception and recording
-- Application handlers (IVR, Queue, Conference)
-- Media server client integration
+- Advanced transfer scenarios (attended transfer)
+- Error recovery and failover
+- Application handler framework (IVR, Queue)
 
-**Why Not Implemented**:
-- Requires completion of session-core-v3 stabilization
-- Needs media-server-core for media processing
-- Complex state management requires careful design
-
-**Estimated Effort**: 4-6 weeks (1 developer)
-
-**Dependencies**:
-```rust
-// Planned dependencies (not yet in Cargo.toml)
-// dialog-core ✅ (ready)
-// media-server-core ❌ (not implemented)
-// infra-common ✅ (ready)
+**Code Statistics**:
 ```
-
-**Status Indicators**:
-```
-📁 crates/b2bua-core/          ❌ Directory does not exist
-📄 Cargo.toml member           ❌ Not in workspace
-🧪 Tests                       ❌ None
-📖 Implementation code         ❌ 0%
+📁 crates/b2bua-core/          ✅ Directory exists
+📄 Cargo.toml member           ✅ In workspace
+📖 Implementation code         ~337 lines (4 files)
+🧪 Tests                       ⚠️ Basic only
 ```
 
 ---
 
-### 2. proxy-core ❌ NOT IMPLEMENTED
+### 2. proxy-core ⚠️ PARTIALLY IMPLEMENTED
 
-**Status**: Not Started  
-**Priority**: 🔴 Critical  
-**Blocking**: Enterprise SIP deployments, load balancing  
+**Status**: ~40% Complete  
+**Priority**: 🟡 Medium  
 **Design Document**: Referenced in [CALL_CENTER_REFERENCE_ARCHITECTURE.md](CALL_CENTER_REFERENCE_ARCHITECTURE.md)
 
-**Planned Features**:
-- Stateless SIP proxy functionality
-- Request routing based on rules
-- Load balancing across servers
+**Implemented Features** ✅:
+- ProxyServer basic structure
+- InMemoryLocationService (user registration lookup)
+- BasicDnsResolver (stub for domain resolution)
+- Request forwarding via TransactionManager
+- REGISTER handling with 200 OK response
+
+**Not Yet Implemented** 🚧:
+- Load balancing algorithms
 - Parallel/serial forking
 - Route advance on failure
+- Persistent location service
+- SRV record lookup
 
-**Why Not Implemented**:
-- Lower priority than B2BUA for initial use cases
-- Can be partially replaced by external proxies (Kamailio, OpenSIPS)
-- Requires mature dialog-core and transaction handling
-
-**Estimated Effort**: 3-4 weeks (1 developer)
-
-**Dependencies**:
-```rust
-// Planned dependencies
-// dialog-core ✅ (ready)
-// sip-core ✅ (ready)
-// infra-common ✅ (ready)
+**Code Statistics**:
 ```
-
-**Status Indicators**:
-```
-📁 crates/proxy-core/          ❌ Directory does not exist
-📄 Cargo.toml member           ❌ Not in workspace
-🧪 Tests                       ❌ None
-📖 Implementation code         ❌ 0%
+📁 crates/proxy-core/          ✅ Directory exists
+📄 Cargo.toml member           ✅ In workspace
+📖 Implementation code         ~257 lines (1 file)
+🧪 Tests                       ⚠️ Basic only
 ```
 
 ---
 
-### 3. media-server-core ❌ NOT IMPLEMENTED
+### 3. media-server-core ⚠️ PARTIALLY IMPLEMENTED
 
-**Status**: Not Started  
-**Priority**: 🔴 Critical  
-**Blocking**: B2BUA media processing, conferences, IVR  
+**Status**: ~50% Complete  
+**Priority**: 🟡 Medium (basic functionality exists)  
 **Design Document**: [MEDIA_SERVER_PLAN.md](MEDIA_SERVER_PLAN.md) (1051 lines)
 
-**Planned Features**:
-- Standalone media server (separate from signaling)
-- Endpoint pool management
-- Mixer engine (N-way audio mixing)
+**Implemented Features** ✅:
+- MediaServerEngine with MediaEngine integration
+- ConferenceManager for N-way mixing
+- DTMF event detection (RFC 2833/4733)
+- WAV file playback to sessions
+- RtpBridge integration
+- Broadcast channel for DTMF events
+
+**Not Yet Implemented** 🚧:
 - Recorder engine
-- Player engine (IVR playback)
-- DTMF detector
+- Complete IVR flow management
 - REST/gRPC control API
+- Endpoint pool management
+- Advanced mixer configurations
 
-**Why Not Implemented**:
-- Complex media processing architecture
-- Requires careful RTP handling and performance optimization
-- Needs clear separation from media-core (which is local processing)
-
-**Estimated Effort**: 6-8 weeks (1 developer)
-
-**Dependencies**:
-```rust
-// Planned dependencies
-// media-core ✅ (ready for local processing)
-// rtp-core ✅ (ready)
-// codec-core ✅ (ready)
-// infra-common ✅ (ready)
+**Code Statistics**:
 ```
-
-**Architecture Note**:
-```
-b2bua-core → (API) → media-server-core → rtp-core
-              ↑
-              └─ REST/gRPC control interface
-```
-
-**Status Indicators**:
-```
-📁 crates/media-server-core/   ❌ Directory does not exist
-📄 Cargo.toml member           ❌ Not in workspace
-🧪 Tests                       ❌ None
-📖 Implementation code         ❌ 0%
+📁 crates/media-server-core/   ✅ Directory exists
+📄 Cargo.toml member           ✅ In workspace
+📖 Implementation code         ~351 lines (2 files)
+🧪 Tests                       ⚠️ Basic only
 ```
 
 ---
 
-## 🟡 Medium Priority Components
+### 4. sbc-core ⚠️ PARTIALLY IMPLEMENTED
 
-### 4. sbc-core ❌ NOT IMPLEMENTED
-
-**Status**: Not Started  
+**Status**: ~40% Complete  
 **Priority**: 🟡 Medium  
-**Blocking**: Internet-facing deployments, security  
 **Design Document**: Referenced in architecture docs
 
-**Planned Features**:
-- Session Border Controller functionality
-- Topology hiding (remove internal IPs)
-- NAT traversal (Far-end NAT support)
-- Protocol normalization
-- Rate limiting and DDoS protection
+**Implemented Features** ✅:
+- SbcEngine with configurable policies
+- Topology hiding (header stripping: Server, User-Agent)
+- Rate limiting per source IP
+- **Integration with B2BUA** (`B2buaEngine::process_invite()` calls `sbc.process_request()`)
+
+**Not Yet Implemented** 🚧:
+- Via/Contact rewriting for full topology hiding
+- NAT traversal (STUN/TURN integration)
 - TLS termination
-- Header manipulation
+- Protocol normalization
+- Advanced media anchoring
 
-**Why Not Implemented**:
-- Can use external SBCs initially (Kamailio with rtpengine, FreeSWITCH)
-- Complex NAT traversal and media anchoring
-- Security features require careful implementation
-
-**Estimated Effort**: 4-6 weeks (1 developer)
-
-**Dependencies**:
-```rust
-// Planned dependencies
-// b2bua-core ❌ (optional, for B2BUA mode)
-// proxy-core ❌ (optional, for proxy mode)
-// media-core ✅ (for RTP anchoring)
-// sip-transport ✅ (ready)
+**Code Statistics**:
+```
+📁 crates/sbc-core/            ✅ Directory exists
+📄 Cargo.toml member           ✅ In workspace
+📖 Implementation code         ~162 lines (2 files)
+🧪 Tests                       ⚠️ Basic only
 ```
 
-**Status Indicators**:
-```
-📁 crates/sbc-core/            ❌ Directory does not exist
-📄 Cargo.toml member           ❌ Not in workspace
-🧪 Tests                       ❌ None
-📖 Implementation code         ❌ 0%
-```
+---
+
+## 🔴 Features Still Missing
+
+The following features are **not yet started** and need implementation:
+
+| Feature | Component | Priority | Effort |
+|---------|-----------|----------|--------|
+| Call Recording | media-server-core | 🔴 High | 2-3 weeks |
+| REST/gRPC Control API | media-server-core | 🔴 High | 2 weeks |
+| Load Balancing | proxy-core | 🟡 Medium | 2 weeks |
+| Full NAT Traversal | sbc-core | 🟡 Medium | 3-4 weeks |
+| Attended Transfer | b2bua-core | 🟡 Medium | 2 weeks |
+| TLS Termination | sbc-core | 🟢 Low | 1 week |
+| Via/Contact Rewriting | sbc-core | 🟢 Low | 1 week |
 
 ---
 
@@ -203,36 +170,38 @@ b2bua-core → (API) → media-server-core → rtp-core
 
 ---
 
-## Implementation Roadmap
+## Updated Implementation Roadmap
 
-### Phase 1: Foundation (Current - Q1 2026)
+### Phase 1: Foundation ✅ COMPLETE (Q4 2025 - Q1 2026)
 - ✅ Stabilize session-core-v3
 - ✅ Complete dialog-core enhancements
 - ✅ Finalize media-core and rtp-core
+- ✅ **Scaffold b2bua-core, proxy-core, media-server-core, sbc-core**
+- ✅ **Basic B2BUA bridging with SBC integration**
 
-### Phase 2: Media Infrastructure (Q2 2026)
-- 🎯 **Implement media-server-core** (6-8 weeks)
-  - Endpoint management
-  - Basic mixing
-  - Recorder/Player engines
-  - Control API
+### Phase 2: Feature Completion (Q1-Q2 2026) 🚧 IN PROGRESS
+- 🚧 **Complete media-server-core** (remaining: ~4 weeks)
+  - ✅ Basic mixing (done)
+  - 🚧 Recorder engine
+  - 🚧 REST/gRPC control API
+  - 🚧 Endpoint pool management
 
-### Phase 3: B2BUA (Q2-Q3 2026)
-- 🎯 **Implement b2bua-core** (4-6 weeks)
-  - Dialog pair management
-  - Media server integration
-  - Basic IVR support
-  - Call queuing foundation
+- 🚧 **Complete b2bua-core** (remaining: ~3 weeks)
+  - ✅ Basic bridging (done)
+  - 🚧 Advanced transfer support
+  - 🚧 Error recovery
+  - 🚧 Application handlers (IVR, Queue)
 
-### Phase 4: Proxy and SBC (Q3-Q4 2026)
-- 🎯 **Implement proxy-core** (3-4 weeks)
-  - Stateless proxy
-  - Load balancing
-  - Routing engine
-- 🎯 **Implement sbc-core** (4-6 weeks)
-  - Topology hiding
-  - NAT traversal
-  - Security features
+### Phase 3: Production Hardening (Q2-Q3 2026)
+- 🚧 **Complete proxy-core** (remaining: ~3 weeks)
+  - ✅ Basic forwarding (done)
+  - 🚧 Load balancing
+  - 🚧 Routing engine
+
+- 🚧 **Complete sbc-core** (remaining: ~4 weeks)
+  - ✅ Basic topology hiding (done)
+  - 🚧 Full NAT traversal
+  - 🚧 TLS termination
 
 ---
 
@@ -306,5 +275,5 @@ Want to help implement these components?
 ---
 
 **Maintained By**: RVOIP Core Team  
-**Last Review**: January 11, 2026  
+**Last Review**: January 12, 2026 (Updated after deep audit)  
 **Next Review**: March 2026

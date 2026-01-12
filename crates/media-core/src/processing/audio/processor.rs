@@ -5,7 +5,7 @@
 
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, warn, error};
+use tracing::debug;
 
 use crate::error::{Result, AudioProcessingError};
 use crate::types::{AudioFrame, SampleRate};
@@ -14,10 +14,9 @@ use super::agc::{AutomaticGainControl, AgcConfig, AgcResult};
 
 // NEW: Performance library imports
 use crate::performance::{
-    pool::{AudioFramePool, PooledAudioFrame},
-    zero_copy::{ZeroCopyAudioFrame, SharedAudioBuffer},
+    pool::AudioFramePool,
     simd::SimdProcessor,
-    metrics::{PerformanceMetrics, BenchmarkResults},
+    metrics::PerformanceMetrics,
 };
 
 // NEW: Advanced v2 processor imports
@@ -360,7 +359,7 @@ impl AudioProcessor {
         let mut agc_result = None;
         let mut advanced_vad_result = None;
         let mut advanced_agc_result = None;
-        let mut advanced_aec_result = None;
+        let advanced_aec_result = None;
         
         // Step 1: Get optimized frame for processing
         let mut processed_frame = if self.config.use_zero_copy_frames {

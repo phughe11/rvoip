@@ -8,7 +8,7 @@ use rvoip_dialog_core::{
     api::unified::UnifiedDialogApi,
     DialogId,
 };
-use crate::api::types::{SessionId, CallSession, CallState, MediaInfo};
+use crate::api::types::{SessionId, CallState};
 use crate::coordinator::registry::InternalSessionRegistry;
 use crate::dialog::{DialogError, DialogResult, SessionDialogHandle};
 

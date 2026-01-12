@@ -16,7 +16,6 @@ use crate::api::client::security::{ClientSecurityContext, ClientSecurityConfig};
 use crate::api::server::security::SocketHandle;
 use crate::security::{SecurityKeyExchange, sdes::{Sdes, SdesConfig, SdesRole, SdesCryptoAttribute}};
 use crate::srtp::{SrtpContext, SrtpCryptoSuite, SRTP_AES128_CM_SHA1_80, SRTP_AES128_CM_SHA1_32};
-use crate::srtp::crypto::SrtpCryptoKey;
 
 /// SDES client configuration
 #[derive(Debug, Clone)]

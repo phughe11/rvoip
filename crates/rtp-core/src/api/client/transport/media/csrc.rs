@@ -6,10 +6,10 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::Mutex;
-use tracing::{debug, warn, info};
+use tracing::debug;
 
 use crate::api::common::error::MediaTransportError;
-use crate::{CsrcManager, CsrcMapping, RtpSsrc, RtpCsrc, MAX_CSRC_COUNT};
+use crate::{CsrcManager, CsrcMapping, RtpSsrc, RtpCsrc};
 
 /// Check if CSRC management is enabled
 pub fn is_csrc_management_enabled(

@@ -20,7 +20,6 @@ use super::dialog_id::DialogId;
 use super::dialog_utils::extract_uri_from_contact;
 use super::subscription_state::SubscriptionState;
 use crate::errors::{DialogError, DialogResult};
-use tokio::task::JoinHandle;
 
 /// A SIP dialog as defined in RFC 3261
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -93,8 +92,8 @@ pub struct Dialog {
     /// Number of failed refresh attempts
     pub refresh_failures: u32,
     
-    /// Maximum refresh failures before termination
-    pub max_refresh_failures: u32,
+    /// Remote SDP offer/answer (if available)
+    pub remote_sdp: Option<String>,
 }
 
 impl Dialog {
@@ -130,7 +129,7 @@ impl Dialog {
             event_package: None,
             event_id: None,
             refresh_failures: 0,
-            max_refresh_failures: 3,
+            remote_sdp: None,
         }
     }
     
@@ -276,6 +275,14 @@ impl Dialog {
         // Extract Route set from Record-Route headers
         let route_set = extract_route_set(response, is_initiator);
         
+        // Extract Remote SDP
+        let remote_sdp = if response.body.len() > 0 {
+             // Basic check for application/sdp content type could be added here
+             String::from_utf8(response.body.to_vec()).ok()
+        } else {
+             None
+        };
+
         Some(Self {
             id: DialogId::new(),
             state: DialogState::Confirmed,
@@ -299,7 +306,7 @@ impl Dialog {
             event_package: None,
             event_id: None,
             refresh_failures: 0,
-            max_refresh_failures: 3,
+            remote_sdp,
         })
     }
     
@@ -369,6 +376,13 @@ impl Dialog {
         
         let route_set = extract_route_set(response, is_initiator);
         
+        // Extract Remote SDP
+        let remote_sdp = if response.body.len() > 0 {
+             String::from_utf8(response.body.to_vec()).ok()
+        } else {
+             None
+        };
+        
         Some(Self {
             id: DialogId::new(),
             state: DialogState::Early,
@@ -392,7 +406,7 @@ impl Dialog {
             event_package: None,
             event_id: None,
             refresh_failures: 0,
-            max_refresh_failures: 3,
+            remote_sdp,
         })
     }
     
@@ -400,7 +414,7 @@ impl Dialog {
     
     /// Initialize dialog for subscription with event package
     pub fn init_subscription(&mut self, event_package: String, event_id: Option<String>, expires: u32) {
-        use std::time::{Duration, Instant};
+        use std::time::Duration;
         
         self.event_package = Some(event_package);
         self.event_id = event_id;
@@ -437,7 +451,7 @@ impl Dialog {
     
     /// Mark subscription as refreshing
     pub fn start_subscription_refresh(&mut self, new_expires: u32) {
-        use std::time::{Duration, Instant};
+        use std::time::Duration;
         
         if let Some(SubscriptionState::Active { remaining_duration, .. }) = self.subscription_state {
             self.subscription_state = Some(SubscriptionState::Refreshing {
@@ -460,7 +474,7 @@ impl Dialog {
     pub fn record_refresh_failure(&mut self) {
         self.refresh_failures += 1;
         
-        if self.refresh_failures >= self.max_refresh_failures {
+        if self.refresh_failures >= 3 {
             self.subscription_state = Some(SubscriptionState::Terminated {
                 reason: Some(crate::dialog::SubscriptionTerminationReason::RefreshFailed),
             });

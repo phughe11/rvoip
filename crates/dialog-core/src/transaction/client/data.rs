@@ -28,7 +28,7 @@ use rvoip_sip_transport::Transport;
 
 use crate::transaction::error::{Error, Result};
 use crate::transaction::{
-    Transaction, TransactionState, TransactionKey, TransactionEvent,
+    Transaction, TransactionKey, TransactionEvent,
     InternalTransactionCommand, AtomicTransactionState
 };
 use crate::transaction::state::TransactionLifecycle;

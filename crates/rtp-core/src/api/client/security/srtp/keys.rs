@@ -4,11 +4,11 @@
 
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, info};
 
 use crate::api::common::error::SecurityError;
 use crate::api::common::config::SrtpProfile;
-use crate::srtp::{SrtpContext, SrtpCryptoSuite, SRTP_AES128_CM_SHA1_80, SRTP_AES128_CM_SHA1_32, SRTP_NULL_NULL, SRTP_AEAD_AES_128_GCM, SRTP_AEAD_AES_256_GCM};
+use crate::srtp::{SrtpContext, SrtpCryptoSuite, SRTP_AES128_CM_SHA1_80, SRTP_AES128_CM_SHA1_32, SRTP_AEAD_AES_128_GCM, SRTP_AEAD_AES_256_GCM};
 use crate::srtp::crypto::SrtpCryptoKey;
 use crate::dtls::DtlsConnection;
 

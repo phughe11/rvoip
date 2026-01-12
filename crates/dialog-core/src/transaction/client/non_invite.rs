@@ -1,68 +1,3 @@
-/// # Non-INVITE Client Transaction Implementation
-///
-/// This module implements the non-INVITE client transaction state machine as defined in
-/// [RFC 3261 Section 17.1.2](https://datatracker.ietf.org/doc/html/rfc3261#section-17.1.2).
-///
-/// ## State Machine
-///
-/// The non-INVITE client transaction follows this state machine:
-///
-/// ```text
-///                                  |Request from TU
-///                                  |send request
-///               Timer E            V
-///               send request  +-----------+
-///                   +---------|           |-------------------+
-///                   |         |  Trying   |  Timer F fires    |
-///                   +-------->|           |  or Transport Err.|
-///                             +-----------+  inform TU        |
-///                               |  |                          |
-///                               |  |1xx                       |
-///                               |  |from                      |
-///                               |  |TL                        |
-///           Timer E             |  |                          |
-///           send request        |  |                          |
-///               +---------------|--|---+                      |
-///               |               |  |   |                      |
-///               |               |  |   |                      |
-///               |               |  |   |                      |
-///               |               |  |   |                      |
-///       +-------V------+        |  |   |                      |
-///       |              |<-------+  |   |                      |
-///       |  Proceeding  |          |   |                      |
-///       |              |----------+   |    2xx from TL       |
-///       +-------+------+              |    inform TU         |
-///               |                     |                       |
-///               |                     |                       |
-///               | 300-699 from TL     |                       |
-///               | inform TU           |                       |
-///               |                     |                       |
-///               |                     |                       |
-///       +-------V------+          +---+---+                   |
-///       |              |          |       |                   |
-///       |  Completed   |          | Term. |<------------------+
-///       |              |          |       |
-///       +-------+------+          +-------+
-///               |
-///        Timer K|
-///               |
-///               V
-///         +-----------+
-///         |           |
-///         | Terminated|
-///         |           |
-///         +-----------+
-/// ```
-///
-/// ## Timers
-///
-/// Non-INVITE client transactions use the following timers:
-///
-/// - **Timer E**: Initial value T1, doubles on each retransmission (up to T2). Controls request retransmissions.
-/// - **Timer F**: Typically 64*T1. Controls transaction timeout. When it fires, the transaction terminates with an error.
-/// - **Timer K**: Typically 5s. Controls how long to wait in Completed state for response retransmissions.
-
-use std::fmt;
 use std::future::Future;
 use std::net::SocketAddr;
 use std::pin::Pin;
@@ -83,9 +18,8 @@ use crate::transaction::{
 use crate::transaction::timer::{TimerSettings, TimerFactory, TimerManager, TimerType};
 use crate::transaction::client::data::CommonClientTransaction;
 use crate::transaction::client::{ClientTransaction, ClientTransactionData};
-use crate::transaction::utils;
 use crate::transaction::logic::TransactionLogic;
-use crate::transaction::runner::{run_transaction_loop, HasCommandSender, AsRefKey};
+use crate::transaction::runner::run_transaction_loop;
 use crate::transaction::timer_utils;
 use crate::transaction::validators;
 use crate::transaction::common_logic;

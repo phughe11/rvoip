@@ -4,10 +4,9 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
 use tokio::time::interval;
-use tracing::{debug, error, info, trace, warn};
+use tracing::{debug, error, info, trace};
 
 use super::TcpConnection;
-use crate::error::Result;
 
 /// Configuration for the TCP connection pool
 #[derive(Clone, Debug)]

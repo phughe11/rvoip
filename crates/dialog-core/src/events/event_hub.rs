@@ -10,15 +10,11 @@ use tracing::{debug, info, warn, error};
 
 use rvoip_infra_common::events::coordinator::{GlobalEventCoordinator, CrossCrateEventHandler};
 use rvoip_infra_common::events::cross_crate::{
-    CrossCrateEvent, RvoipCrossCrateEvent, DialogToSessionEvent, SessionToDialogEvent,
-    DialogToTransportEvent, TransportToDialogEvent, CallState, TerminationReason
+    CrossCrateEvent, RvoipCrossCrateEvent, DialogToSessionEvent, CallState, TerminationReason
 };
-use rvoip_sip_core::{StatusCode, Request};
-use crate::transaction::TransactionKey;
 
 use crate::events::{DialogEvent, SessionCoordinationEvent};
 use crate::dialog::{DialogId, DialogState};
-use crate::errors::DialogError;
 use crate::manager::DialogManager;
 
 /// Dialog Event Hub that handles all cross-crate event communication

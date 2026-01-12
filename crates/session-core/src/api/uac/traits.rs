@@ -2,7 +2,6 @@
 
 use async_trait::async_trait;
 use crate::api::types::{SessionId, CallState};
-use crate::errors::Result;
 
 /// Event handler for UAC events
 #[async_trait]

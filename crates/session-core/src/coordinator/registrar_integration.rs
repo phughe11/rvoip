@@ -4,12 +4,9 @@
 //! handling user registration, presence management, and OAuth authentication.
 
 use std::sync::Arc;
-use std::collections::HashMap;
 use std::str::FromStr;
-use tokio::sync::RwLock;
-use async_trait::async_trait;
 use anyhow::{Result, anyhow};
-use tracing::{debug, info, warn, error};
+use tracing::{debug, info, warn};
 use dashmap::DashMap;
 
 use rvoip_sip_core::prelude::*;
@@ -22,14 +19,10 @@ use rvoip_registrar_core::{
     types::RegistrarConfig,
     events::{RegistrarEvent, PresenceEvent},
 };
-use rvoip_infra_common::events::{
-    system::EventSystem,
-    api::EventSystem as EventSystemTrait,
-};
+use rvoip_infra_common::events::system::EventSystem;
 
 use crate::auth::oauth::{OAuth2Validator, OAuth2Config};
 use crate::errors::SessionError;
-use crate::api::types::SessionId;
 use crate::api::builder::SessionManagerConfig;
 
 /// Maps subscription Call-IDs to their corresponding dialogs
@@ -167,7 +160,7 @@ impl RegistrarIntegration {
         let contact_info = rvoip_registrar_core::types::ContactInfo {
             uri: format!("{}", contact_header),
             instance_id: format!("instance-{}", uuid::Uuid::new_v4()),
-            transport: rvoip_registrar_core::types::Transport::UDP,
+            transport: rvoip_registrar_core::types::Transport::Udp,
             user_agent: "rvoip/1.0".to_string(),
             expires: Utc::now() + Duration::seconds(expires.unwrap_or(3600) as i64),
             q_value: 1.0,
@@ -334,7 +327,7 @@ impl RegistrarIntegration {
         
         // Create NOTIFY request manually since we can't call methods on Arc<Dialog>
         use rvoip_sip_core::builder::SimpleRequestBuilder;
-        use rvoip_sip_core::types::subscription_state::{SubscriptionState, SubState};
+        use rvoip_sip_core::types::subscription_state::SubscriptionState;
         
         // Generate PIDF body from presence state
         let pidf_body = self.registrar.generate_pidf(target_aor).await?;

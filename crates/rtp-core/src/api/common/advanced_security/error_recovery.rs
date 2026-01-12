@@ -8,11 +8,11 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use std::collections::VecDeque;
 use tokio::sync::RwLock;
-use tracing::{info, debug, warn, error};
+use tracing::{info, debug, warn};
 
 use crate::api::common::config::{KeyExchangeMethod, SecurityConfig};
 use crate::api::common::error::SecurityError;
-use crate::api::common::unified_security::{UnifiedSecurityContext, SecurityState};
+use crate::api::common::unified_security::UnifiedSecurityContext;
 
 /// Recovery strategy defines how to handle security failures
 #[derive(Debug, Clone, PartialEq, Eq)]

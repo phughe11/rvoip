@@ -7,7 +7,6 @@ use std::collections::HashMap;
 use chrono::{DateTime, Utc};
 use jsonwebtoken::{decode, decode_header, Algorithm, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
-use tracing::{debug, warn};
 
 use super::types::{AuthError, AuthResult, TokenInfo};
 use super::oauth::{Jwk, JwkSet};

@@ -229,7 +229,7 @@ pub async fn rate_limit_middleware(
     request: Request<axum::body::Body>,
     next: Next,
 ) -> Result<Response, StatusCode> {
-    use crate::{UserClaims, api::AuthType};
+    use crate::UserClaims;
     use jsonwebtoken::{decode, Algorithm, Validation, DecodingKey};
     
     // Try to extract user ID from JWT token in Authorization header

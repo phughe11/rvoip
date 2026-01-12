@@ -9,7 +9,6 @@ use std::time::{Duration, SystemTime};
 use tokio::sync::{Mutex, RwLock};
 use async_trait::async_trait;
 
-use tracing::{debug, info, warn};
 
 use crate::api::common::stats::{
     MediaStatsCollector, MediaStats, StreamStats, StatsError,

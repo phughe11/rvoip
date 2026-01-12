@@ -40,6 +40,10 @@ pub enum Error {
     #[error("Connection timed out: {0}")]
     ConnectionTimeout(SocketAddr),
 
+    /// TLS general error
+    #[error("TLS error: {0}")]
+    TlsError(String),
+
     /// TLS handshake failed
     #[error("TLS handshake failed: {0}")]
     TlsHandshakeFailed(String),

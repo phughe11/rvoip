@@ -9,9 +9,9 @@ use tracing::{debug, info};
 use crate::error::{Error, Result};
 use crate::types::{DialogId, AudioFrame};
 use crate::processing::audio::{
-    AdvancedVoiceActivityDetector, AdvancedVadConfig,
-    AdvancedAutomaticGainControl, AdvancedAgcConfig,
-    AdvancedAcousticEchoCanceller, AdvancedAecConfig,
+    AdvancedVoiceActivityDetector,
+    AdvancedAutomaticGainControl,
+    AdvancedAcousticEchoCanceller,
 };
 use crate::performance::{
     metrics::PerformanceMetrics,

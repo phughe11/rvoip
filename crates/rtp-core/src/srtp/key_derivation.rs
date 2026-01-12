@@ -1,6 +1,5 @@
 use crate::error::Error;
 use crate::Result;
-use crate::packet::RtpPacket;
 use super::crypto::SrtpCryptoKey;
 use aes::{Aes128, cipher::{BlockEncrypt, KeyInit, generic_array::GenericArray}};
 

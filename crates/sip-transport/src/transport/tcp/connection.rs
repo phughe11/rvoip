@@ -1,16 +1,14 @@
 use std::io;
 use std::net::SocketAddr;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use bytes::{BytesMut, Buf, BufMut};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::sync::Mutex;
-use tracing::{debug, error, trace, warn};
+use tracing::{debug, trace, warn};
 
 use rvoip_sip_core::{Message, parse_message};
 use crate::error::{Error, Result};
-use rvoip_sip_core::builder::ContentLengthBuilderExt;
 
 // Buffer sizes
 const INITIAL_BUFFER_SIZE: usize = 8192;

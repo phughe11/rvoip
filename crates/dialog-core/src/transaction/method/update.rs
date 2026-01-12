@@ -57,7 +57,6 @@
 //! requests according to RFC 3311.
 
 use std::net::SocketAddr;
-use std::str::FromStr;
 use rvoip_sip_core::prelude::*;
 use crate::transaction::error::{Error, Result};
 

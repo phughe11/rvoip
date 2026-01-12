@@ -5,7 +5,6 @@
 
 use rustfft::{FftPlanner, num_complex::Complex};
 use apodize::hanning_iter;
-use std::f32::consts::PI;
 use tracing::{debug, trace};
 use crate::error::{Result, AudioProcessingError};
 use crate::types::AudioFrame;
@@ -142,7 +141,7 @@ impl AdvancedVoiceActivityDetector {
         }
         
         // Create FFT planner
-        let mut fft_planner = FftPlanner::new();
+        let fft_planner = FftPlanner::new();
         let fft_buffer = vec![Complex::new(0.0, 0.0); config.fft_size];
         
         // Generate Hanning window

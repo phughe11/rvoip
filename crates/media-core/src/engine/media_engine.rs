@@ -7,7 +7,7 @@
 use std::sync::Arc;
 use std::collections::HashMap;
 use tokio::sync::RwLock;
-use tracing::{debug, info, warn, error};
+use tracing::{debug, info, warn};
 
 use crate::error::{Result, Error};
 use crate::types::{DialogId, MediaSessionId, PayloadType, SampleRate};
@@ -23,9 +23,9 @@ use crate::performance::{
 // NEW: Audio processing imports
 use crate::processing::audio::{
     AudioProcessor, AudioProcessingConfig,
-    AdvancedVoiceActivityDetector, AdvancedVadConfig,
-    AdvancedAutomaticGainControl, AdvancedAgcConfig,
-    AdvancedAcousticEchoCanceller, AdvancedAecConfig,
+    AdvancedVoiceActivityDetector,
+    AdvancedAutomaticGainControl,
+    AdvancedAcousticEchoCanceller,
 };
 
 /// Performance optimization level for media sessions

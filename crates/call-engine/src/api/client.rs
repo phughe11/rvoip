@@ -346,7 +346,6 @@
 //! ```
 
 use std::sync::Arc;
-use async_trait::async_trait;
 use rvoip_session_core::{SessionId, CallHandler};
 
 use crate::{

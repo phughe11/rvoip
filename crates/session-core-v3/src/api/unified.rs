@@ -17,7 +17,8 @@ use std::sync::Arc;
 use std::net::{IpAddr, SocketAddr};
 use tokio::sync::{mpsc, RwLock};
 use rvoip_infra_common::events::coordinator::GlobalEventCoordinator;
-use tracing::debug;
+use tracing::{debug, info, warn};
+use rvoip_sbc_core::nat::StunClient;
 
 /// Configuration for the unified coordinator
 #[derive(Debug, Clone)]
@@ -37,6 +38,8 @@ pub struct Config {
     pub state_table_path: Option<String>,
     /// Local SIP URI (e.g., "sip:alice@127.0.0.1:5060")
     pub local_uri: String,
+    /// Optional STUN server for NAT discovery (e.g., "stun.l.google.com:19302")
+    pub stun_server: Option<String>,
 }
 
 impl Default for Config {
@@ -51,6 +54,7 @@ impl Default for Config {
             bind_addr: SocketAddr::new(ip, port),
             state_table_path: None,
             local_uri: format!("sip:user@{}:{}", ip, port),
+            stun_server: None,
         }
     }
 }
@@ -78,7 +82,10 @@ pub struct UnifiedCoordinator {
 
 impl UnifiedCoordinator {
     /// Create a new coordinator
-    pub async fn new(config: Config) -> Result<Arc<Self>> {
+    pub async fn new(mut config: Config) -> Result<Arc<Self>> {
+        // NAT Discovery
+        Self::discover_nat(&mut config).await;
+
         // Get the global event coordinator singleton
         let global_coordinator = rvoip_infra_common::events::global_coordinator()
             .await
@@ -158,9 +165,12 @@ impl UnifiedCoordinator {
     
     /// Create a new coordinator with SimplePeer event integration
     pub async fn with_simple_peer_events(
-        config: Config, 
+        mut config: Config, 
         simple_peer_event_tx: tokio::sync::mpsc::Sender<crate::api::events::Event>
     ) -> Result<Arc<Self>> {
+        // NAT Discovery
+        Self::discover_nat(&mut config).await;
+
         // Get the global event coordinator singleton
         let global_coordinator = rvoip_infra_common::events::global_coordinator()
             .await
@@ -238,6 +248,24 @@ impl UnifiedCoordinator {
         debug!("🔍 [DEBUG] SessionCrossCrateEventHandler started successfully");
 
         Ok(coordinator)
+    }
+
+    async fn discover_nat(config: &mut Config) {
+        if let Some(stun_server) = &config.stun_server {
+            info!("🌐 Performing NAT discovery via {}...", stun_server);
+            match StunClient::bind(0).await {
+                Ok(client) => {
+                    match client.discover_public_ip(stun_server).await {
+                        Ok(public_addr) => {
+                            info!("🌍 NAT Discovery success: Public IP is {}", public_addr.ip());
+                            config.local_ip = public_addr.ip();
+                        },
+                        Err(e) => warn!("⚠️ NAT Discovery failed: {}. Falling back to local IP {}", e, config.local_ip),
+                    }
+                },
+                Err(e) => warn!("⚠️ Failed to bind STUN client: {}. Skipping NAT discovery.", e),
+            }
+        }
     }
     
     // ===== Simple Call Operations =====

@@ -12,7 +12,6 @@ use rvoip_sip_core::builder::SimpleRequestBuilder;
 use rvoip_sip_core::types::{
     content_type::ContentType,
     expires::Expires,
-    contact::{Contact, ContactParamInfo},
     route::Route,
     event::{Event, EventType},
 };

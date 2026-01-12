@@ -1,70 +1,3 @@
-/// # INVITE Server Transaction Implementation
-///
-/// This module implements the INVITE server transaction state machine as defined in
-/// [RFC 3261 Section 17.2.1](https://datatracker.ietf.org/doc/html/rfc3261#section-17.2.1).
-///
-/// ## State Machine
-///
-/// The INVITE server transaction follows this state machine:
-///
-/// ```text
-///                                  |INVITE
-///                                  |pass to TU
-///                      INVITE      V send 100 if TU won't in 200ms
-///                      send 100    +-----------+
-///                         +--------|           |--------+101-199 from TU
-///                         |        | Proceeding|        |send
-///                         +------->|           |<-------+
-///                                  +-----------+
-///                                      |    |
-///                                      |    | 2xx from TU
-///                                      |    | send
-///                                      |    V
-///                                      |  +------+
-///                                      |  |      |
-///                                      |  |Terminated
-///                                      |  |      |
-///                                      |  +------+
-///                                      |
-///                                      |    | 3xx-6xx from TU
-///                                      |    | send, create timer G
-///                                      |    V
-///                                  +-----------+
-///                                  |           |----+
-///                                  | Completed |    |Timer G fires
-///                                  |           |    |send response, reset G
-///                                  +-----------+    +--+
-///                                     |  ^             |
-///                                     |  +-------------+
-///                                     | ACK
-///                                     | -
-///                                     |
-///                                     V
-///                                  +-----------+
-///                                  |           |
-///                                  | Confirmed |
-///                                  |           |
-///                                  +-----------+
-///                                     |
-///                                     | Timer I fires
-///                                     |
-///                                     V
-///                                  +-----------+
-///                                  |           |
-///                                  | Terminated|
-///                                  |           |
-///                                  +-----------+
-/// ```
-///
-/// ## Timers
-///
-/// INVITE server transactions use the following timers:
-///
-/// - **Timer G**: Initial value T1, doubles on each retransmission (up to T2). Controls response retransmissions in Completed state.
-/// - **Timer H**: Typically 64*T1. Controls timeout waiting for ACK. When it fires, the transaction terminates with an error.
-/// - **Timer I**: Typically 5s (UDP) or 0s (TCP/SCTP). Controls how long to wait in Confirmed state.
-
-use std::fmt;
 use std::future::Future;
 use std::net::SocketAddr;
 use std::pin::Pin;
@@ -87,9 +20,8 @@ use crate::transaction::server::{
     ServerTransaction, ServerTransactionData, CommonServerTransaction
 };
 use crate::transaction::logic::TransactionLogic;
-use crate::transaction::runner::{run_transaction_loop, HasCommandSender, AsRefKey};
+use crate::transaction::runner::run_transaction_loop;
 use crate::transaction::timer_utils;
-use crate::transaction::validators;
 use crate::transaction::common_logic;
 use crate::transaction::utils;
 

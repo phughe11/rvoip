@@ -1,9 +1,5 @@
 //! UAC-specific types
 
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use crate::api::types::{SessionId, CallState};
-use crate::errors::Result;
 
 /// UAC configuration
 #[derive(Debug, Clone)]

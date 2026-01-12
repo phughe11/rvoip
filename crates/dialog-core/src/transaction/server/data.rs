@@ -1,34 +1,14 @@
-/// # Server Transaction Data Structures
-///
-/// This module provides data structures and traits for implementing the server transaction 
-/// state machines defined in RFC 3261 Section 17.2.
-///
-/// Server transactions in SIP are responsible for:
-/// - Processing incoming requests from clients
-/// - Sending responses reliably
-/// - Managing state transitions based on request/response types
-/// - Handling retransmissions according to RFC 3261 rules
-///
-/// The key components in this module are:
-/// - `ServerTransactionData`: Core data structure shared by all server transaction types
-/// - `CommonServerTransaction`: Trait providing shared behavior across transaction types
-/// - Command channels for communication with the transaction's event loop
-
-use std::fmt;
-use std::future::Future;
 use std::net::SocketAddr;
-use std::pin::Pin;
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
 use tokio::task::JoinHandle;
-use tracing::{debug, trace};
+use tracing::debug;
 
 use rvoip_sip_core::prelude::*;
 use rvoip_sip_transport::Transport;
 
-use crate::transaction::error::{Error, Result};
 use crate::transaction::{
-    Transaction, TransactionState, TransactionKey, TransactionEvent,
+    Transaction, TransactionKey, TransactionEvent,
     InternalTransactionCommand, AtomicTransactionState
 };
 use crate::transaction::state::TransactionLifecycle;

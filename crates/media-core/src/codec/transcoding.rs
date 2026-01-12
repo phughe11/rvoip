@@ -6,10 +6,10 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, warn, trace};
+use tracing::{debug, trace};
 
 use crate::error::{Result, CodecError};
-use crate::types::{AudioFrame, SampleRate, PayloadType};
+use crate::types::{SampleRate, PayloadType};
 use crate::codec::audio::common::AudioCodec;
 use crate::codec::audio::{OpusCodec, OpusApplication, G729Codec};
 use crate::codec::factory::CodecFactory;

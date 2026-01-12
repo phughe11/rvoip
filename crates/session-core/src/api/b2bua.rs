@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::collections::HashMap;
 use tokio::sync::{mpsc, RwLock};
 use crate::api::builder::SessionManagerConfig;
-use crate::api::types::{SessionId, IncomingCall, CallDecision};
+use crate::api::types::{IncomingCall, CallDecision};
 use crate::api::call::SimpleCall;
 use crate::api::bridge::CallBridge;
 use crate::api::handlers::CallHandler;

@@ -5,11 +5,11 @@
 
 use std::collections::HashMap;
 use std::str::FromStr;
-use tracing::{debug, warn};
+use tracing::warn;
 
-use crate::api::{error::MediaError, types::{MediaCodec, MediaDirection, MediaStreamConfig}};
+use crate::api::{error::MediaError, types::{MediaCodec, MediaDirection}};
 use super::{
-    registry::{PayloadTypeInfo, get_global_registry},
+    registry::get_global_registry,
     negotiation::{CodecCapability, CodecNegotiator, NegotiationPreferences}
 };
 

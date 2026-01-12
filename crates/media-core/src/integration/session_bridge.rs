@@ -12,8 +12,7 @@ use crate::error::{Result, IntegrationError};
 use crate::types::{DialogId, MediaSessionId};
 use crate::session::{MediaSession, MediaSessionConfig};
 use super::events::{
-    IntegrationEvent, IntegrationEventType, MediaCapabilities, 
-    AudioCodecCapability, CodecParameters
+    IntegrationEvent, IntegrationEventType, MediaCapabilities
 };
 
 /// Configuration for session bridge
@@ -110,7 +109,7 @@ impl SessionBridge {
     
     /// Get media capabilities for SDP negotiation
     pub fn get_media_capabilities(&self) -> MediaCapabilities {
-        let mut capabilities = MediaCapabilities::default();
+        let capabilities = MediaCapabilities::default();
         
         // Add Opus codec if available
         #[cfg(feature = "opus")]

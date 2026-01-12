@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 use dashmap::DashMap;
-use tracing::{debug, warn, info};
+use tracing::{debug, info};
 use serde::{Deserialize, Serialize};
 
 use super::types::{TokenInfo, AuthError, AuthResult, IntrospectionResponse};

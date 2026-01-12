@@ -7,9 +7,9 @@
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::api::common::config::{KeyExchangeMethod, SecurityConfig, SecurityMode};
+use crate::api::common::config::{KeyExchangeMethod, SecurityConfig};
 use crate::api::common::error::SecurityError;
-use crate::security::{SecurityKeyExchange, sdes::Sdes, mikey::Mikey, zrtp::Zrtp};
+use crate::security::SecurityKeyExchange;
 use crate::srtp::{SrtpContext, SrtpCryptoSuite, crypto::SrtpCryptoKey};
 
 /// Security state for unified context

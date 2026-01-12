@@ -5,7 +5,7 @@
 //! data structures for call queuing operations.
 
 use std::collections::{HashMap, VecDeque, HashSet};
-use tracing::{info, debug, warn};
+use tracing::{info, warn};
 
 use rvoip_session_core::SessionId;
 

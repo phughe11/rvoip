@@ -3,8 +3,8 @@
 //! This module provides utilities to help migrate existing code from the original
 //! types to the optimized Arc-based types gradually, without breaking changes.
 
-use crate::api::types::{SessionId, CallState, MediaInfo};
-use crate::api::optimized_types::{OptimizedSessionId, OptimizedCallState, OptimizedMediaInfo, OptimizedQualityMetrics};
+use crate::api::types::{SessionId, CallState};
+use crate::api::optimized_types::{OptimizedSessionId, OptimizedCallState};
 
 /// Trait for converting from original types to optimized types
 pub trait ToOptimized<T> {

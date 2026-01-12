@@ -8,11 +8,10 @@ use tracing::{debug, error, info, trace, warn};
 use rvoip_sip_core::Message;
 use rvoip_sip_transport::{
     Transport, TransportEvent, UdpTransport, 
-    TcpTransport, WebSocketTransport,
-    error::{Error as TransportError, Result as TransportResult}
+    TcpTransport, WebSocketTransport
 };
 use rvoip_sip_transport::transport::TransportType;
-use rvoip_sip_transport::factory::{TransportFactory, TransportFactoryConfig};
+use rvoip_sip_transport::factory::TransportFactory;
 
 use crate::transaction::error::{Error, Result};
 

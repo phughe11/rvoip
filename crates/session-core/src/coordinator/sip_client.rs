@@ -167,7 +167,7 @@ impl SipClient for Arc<SessionCoordinator> {
         }
         
         use rvoip_sip_core::builder::SimpleRequestBuilder;
-        use rvoip_sip_core::types::{TypedHeader, content_type::ContentType};
+        
         
         // Generate unique identifiers
         let call_id = format!("msg-{}-{}", std::process::id(), uuid::Uuid::new_v4());

@@ -8,7 +8,7 @@ use tokio::sync::mpsc;
 use std::sync::Arc;
 use std::time::Duration;
 
-use crate::api::types::{SessionId, CallSession};
+use crate::api::types::SessionId;
 use crate::errors::Result;
 
 use super::bridge::{BridgeId, BridgeInfo, BridgeEvent};

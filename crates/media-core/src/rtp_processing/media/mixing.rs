@@ -4,8 +4,6 @@
 //! voice activity detection and active speaker mixing.
 
 use std::collections::HashMap;
-use bytes::Bytes;
-use tracing::{debug, warn};
 
 use crate::api::error::MediaError;
 use crate::api::types::{MediaFrame, MediaFrameType};

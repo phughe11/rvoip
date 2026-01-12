@@ -2,8 +2,7 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
-use tokio::select;
-use tracing::{debug, error, info, trace, warn};
+use tracing::{debug, error, info};
 
 use rvoip_sip_core::Message;
 use crate::factory::{TransportFactory, TransportType, TransportFactoryConfig};

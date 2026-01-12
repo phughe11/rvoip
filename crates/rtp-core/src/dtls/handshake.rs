@@ -37,15 +37,11 @@ use bytes::Bytes;
 use rand::Rng;
 
 use super::message::handshake::{
-    HandshakeMessage, ClientHello, ServerHello, 
-    Certificate, ServerKeyExchange, CertificateRequest,
-    ClientKeyExchange, CertificateVerify, Finished,
+    HandshakeMessage, ClientHello, ServerHello,
     HelloVerifyRequest, HandshakeType,
 };
 use super::message::extension::{Extension, UseSrtpExtension, SrtpProtectionProfile};
 use super::{DtlsVersion, DtlsRole, Result};
-use super::crypto::cipher::CipherSuiteId;
-use super::crypto::keys::{calculate_master_secret, generate_ecdhe_pre_master_secret};
 
 /// Handshake state for DTLS connections
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]

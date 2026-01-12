@@ -8,7 +8,7 @@ use tokio::sync::mpsc;
 use rvoip_dialog_core::events::SessionCoordinationEvent;
 use crate::api::types::SessionId;
 use crate::manager::events::SessionEvent;
-use crate::dialog::{DialogError, DialogResult, DialogSessionMap};
+use crate::dialog::{DialogError, DialogResult};
 
 /// Dialog bridge for session-dialog event integration
 /// (parallel to MediaBridge)

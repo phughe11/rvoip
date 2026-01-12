@@ -11,11 +11,11 @@ use std::time::{Duration, Instant};
 use tokio::net::UdpSocket;
 use tokio::sync::Mutex;
 use tokio::time::sleep;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info};
 
 use crate::error::Error;
 use crate::Result;
-use super::validation::{PlatformSocketStrategy, PlatformType, RtpSocketValidator};
+use super::validation::{PlatformSocketStrategy, PlatformType};
 
 /// The default RTP port range recommended by RFC 3550
 /// 

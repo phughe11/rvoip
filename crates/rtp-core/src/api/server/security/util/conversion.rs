@@ -6,11 +6,9 @@
 use std::net::SocketAddr;
 use tracing::debug;
 
-use crate::api::common::error::SecurityError;
 use crate::api::common::config::{SecurityInfo, SecurityMode, SrtpProfile};
 use crate::api::server::security::{ConnectionConfig, ConnectionRole};
 use crate::dtls::{DtlsRole, DtlsVersion};
-use crate::srtp::{SrtpCryptoSuite};
 
 use crate::api::server::security::srtp::keys;
 

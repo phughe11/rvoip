@@ -4,7 +4,6 @@
 //! It has been refactored into smaller, more manageable components.
 
 use std::net::SocketAddr;
-use std::sync::Arc;
 use std::time::Duration;
 use std::collections::HashMap;
 use async_trait::async_trait;
@@ -12,7 +11,6 @@ use async_trait::async_trait;
 use crate::api::common::frame::MediaFrame;
 use crate::api::common::error::MediaTransportError;
 use crate::api::common::events::MediaEventCallback;
-use crate::api::client::config::ClientConfig;
 use crate::api::common::config::SecurityInfo;
 use crate::api::common::stats::MediaStats;
 use crate::api::common::extension::ExtensionFormat;

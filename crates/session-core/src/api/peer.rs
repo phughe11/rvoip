@@ -5,9 +5,8 @@
 
 use std::sync::Arc;
 use tokio::sync::{mpsc, RwLock};
-use crate::api::builder::SessionManagerConfig;
 use crate::api::control::SessionControl;
-use crate::api::types::{SessionId, IncomingCall, CallDecision};
+use crate::api::types::{IncomingCall, CallDecision};
 use crate::api::call::SimpleCall;
 use crate::api::handlers::CallHandler;
 use crate::coordinator::SessionCoordinator;

@@ -6,7 +6,6 @@
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
-use tracing::{debug, warn, info};
 
 use crate::api::common::error::MediaTransportError;
 use crate::api::client::transport::RtcpStats;
@@ -28,7 +27,7 @@ pub async fn send_rtcp_receiver_report(
     }
     
     // Get the session and send the receiver report
-    let mut session = session.lock().await;
+    let session = session.lock().await;
     session.send_receiver_report().await
         .map_err(|e| MediaTransportError::RtcpError(format!("Failed to send RTCP receiver report: {}", e)))
 }
@@ -49,7 +48,7 @@ pub async fn send_rtcp_sender_report(
     }
     
     // Get the session and send the sender report
-    let mut session = session.lock().await;
+    let session = session.lock().await;
     session.send_sender_report().await
         .map_err(|e| MediaTransportError::RtcpError(format!("Failed to send RTCP sender report: {}", e)))
 }

@@ -79,14 +79,13 @@
 /// This architecture separates the transaction-specific behavior from the common
 /// event loop machinery, making the code more maintainable and extensible.
 
-use std::{fmt, net::SocketAddr, sync::Arc, time::Duration};
+use std::{fmt, net::SocketAddr, time::Duration};
 use std::future::Future;
 use std::pin::Pin;
 
 use rvoip_sip_core::prelude::*;
-use rvoip_sip_transport::Transport;
 
-use self::error::{Error, Result};
+use self::error::Result;
 
 // Core submodules
 pub mod error;

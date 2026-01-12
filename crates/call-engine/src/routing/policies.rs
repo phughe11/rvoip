@@ -6,12 +6,11 @@
 //! business requirements.
 
 use std::collections::HashMap;
-use chrono::{DateTime, Utc, Timelike, Weekday, NaiveTime, Datelike};
+use chrono::{DateTime, Utc, Weekday, NaiveTime, Datelike};
 use serde::{Serialize, Deserialize};
-use tracing::{info, debug, warn};
+use tracing::info;
 
-use crate::error::{CallCenterError, Result};
-use crate::agent::{AgentId, AgentStatus};
+use crate::error::Result;
 
 /// # Routing Policies for Business Rules and Call Distribution
 ///

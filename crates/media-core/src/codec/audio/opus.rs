@@ -3,7 +3,7 @@
 //! This module implements the Opus codec, a modern low-latency audio codec
 //! optimized for VoIP applications with excellent quality and adaptability.
 
-use tracing::{debug, warn, error};
+use tracing::{debug, warn};
 use crate::error::{Result, CodecError};
 use crate::types::{AudioFrame, SampleRate};
 use super::common::{AudioCodec, CodecInfo};

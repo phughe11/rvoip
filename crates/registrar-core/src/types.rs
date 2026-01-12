@@ -65,12 +65,12 @@ pub struct ContactInfo {
 /// SIP transport protocols
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum Transport {
-    UDP,
-    TCP,
-    TLS,
-    WS,
-    WSS,
-    SCTP,
+    Udp,
+    Tcp,
+    Tls,
+    Ws,
+    Wss,
+    Sctp,
 }
 
 // ============ Presence Types ============

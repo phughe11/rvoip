@@ -12,13 +12,12 @@ use tracing::{debug, info, warn, error};
 
 use rvoip_infra_common::events::coordinator::{GlobalEventCoordinator, CrossCrateEventHandler};
 use rvoip_infra_common::events::cross_crate::{
-    RvoipCrossCrateEvent, TransportToDialogEvent, RegistrationStatus,
+    RvoipCrossCrateEvent, TransportToDialogEvent,
     DialogToTransportEvent, CrossCrateEvent
 };
 use rvoip_infra_common::planes::LayerTaskManager;
 
 use crate::transport::TransportEvent;
-use rvoip_sip_core::{Method, StatusCode};
 
 /// Transport Event Adapter that bridges local transport events with global cross-crate events
 pub struct TransportEventAdapter {

@@ -24,15 +24,14 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::mpsc;
-use tracing::{debug, error, trace, warn};
+use tracing::{debug, error, trace};
 
 use rvoip_sip_core::prelude::*;
 use rvoip_sip_transport::Transport;
 
 use crate::transaction::error::{Error, Result};
 use crate::transaction::{
-    TransactionState, TransactionKey, TransactionEvent, 
-    InternalTransactionCommand, TransactionKind
+    TransactionState, TransactionKey, TransactionEvent, TransactionKind
 };
 
 /// Send a transaction state changed event to the Transaction User (TU).

@@ -1,4 +1,7 @@
-//! Session-core v2 with state table architecture
+#![deprecated(since = "0.1.26", note = "Please use rvoip-session-core-v3 for new development.")]
+//! Session-core v2 with state table architecture (LEGACY)
+//!
+//! **WARNING: This crate is deprecated. Use `rvoip-session-core-v3` which offers the same state-table architecture but cleaner.**
 //! 
 //! This is a refactored version of session-core that uses a master state table
 //! to coordinate between dialog-core and media-core. The key benefits are:

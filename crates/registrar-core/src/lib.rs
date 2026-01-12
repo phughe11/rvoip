@@ -15,6 +15,9 @@ pub mod api;
 pub mod types;
 pub mod error;
 pub mod events;
+pub mod storage;
+
+pub use storage::Storage;
 
 // Re-exports for convenience
 pub use api::RegistrarService;

@@ -5,20 +5,19 @@
 //! while maintaining backward compatibility with existing dialog event handling.
 
 use std::sync::Arc;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::RwLock;
 use anyhow::Result;
-use tracing::{debug, info, warn, error};
+use tracing::{debug, info, error};
 
 use rvoip_infra_common::events::coordinator::{GlobalEventCoordinator, CrossCrateEventHandler};
 use rvoip_infra_common::events::cross_crate::{
-    RvoipCrossCrateEvent, DialogToSessionEvent, DialogToTransportEvent,
-    SessionToDialogEvent, TransportToDialogEvent, CrossCrateEvent, CallState as CrossCrateCallState
+    RvoipCrossCrateEvent, DialogToSessionEvent,
+    SessionToDialogEvent, CrossCrateEvent, CallState as CrossCrateCallState
 };
 use rvoip_infra_common::planes::LayerTaskManager;
 
 use crate::events::{DialogEvent, SessionCoordinationEvent};
 use crate::dialog::{DialogId, DialogState};
-use crate::errors::DialogError;
 
 /// Dialog Event Adapter that bridges local dialog events with global cross-crate events
 pub struct DialogEventAdapter {

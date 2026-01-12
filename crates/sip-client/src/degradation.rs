@@ -4,7 +4,6 @@
 //! degradation strategies to maintain call continuity under poor conditions.
 
 use crate::{
-    error::{SipClientError, SipClientResult},
     events::{SipClientEvent, EventEmitter},
     recovery::{NetworkMetrics, DegradationActions},
     types::CallId,
@@ -15,7 +14,7 @@ use std::{
     collections::HashMap,
 };
 use tokio::sync::RwLock;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 /// Codec fallback chain for graceful degradation
 #[derive(Debug, Clone)]

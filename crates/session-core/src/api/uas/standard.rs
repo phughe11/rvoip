@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use tokio::sync::RwLock;
 use crate::api::control::SessionControl;
 use crate::api::media::MediaControl;
-use crate::api::types::{SessionId, CallState, IncomingCall, CallDecision};
+use crate::api::types::{SessionId, IncomingCall};
 use crate::api::builder::SessionManagerConfig;
 use crate::api::handlers::CallHandler;
 use crate::coordinator::SessionCoordinator;

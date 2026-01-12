@@ -3,7 +3,6 @@
 //! This module provides comprehensive statistics collection and monitoring
 //! for RTP sessions, including quality metrics and MOS score calculation.
 
-use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::time::interval;
 use tracing::{debug, info, warn};

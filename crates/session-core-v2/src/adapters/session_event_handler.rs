@@ -607,7 +607,12 @@ impl SessionCrossCrateEventHandler {
                 let sid = session_id.clone();
                 let target = refer_to.clone();
                 tokio::spawn(async move {
-                    match coordinator.complete_blind_transfer(&sid, &target).await {
+use crate::transfer::types::{TransferOptions, TransferMode};
+
+// ... inside the function
+                    let options = TransferOptions::blind()
+                        .with_timeout(30000);
+                    match coordinator.complete_transfer(&sid, &target, options).await {
                         Ok(new_id) => info!("✅ [Auto-Transfer] Success: {}", new_id),
                         Err(e) => error!("❌ [Auto-Transfer] Failed: {}", e),
                     }

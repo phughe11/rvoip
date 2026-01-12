@@ -11,7 +11,7 @@ use std::marker::PhantomData;
 use async_trait::async_trait;
 use tracing::{debug, warn};
 
-use crate::events::types::{Event, EventResult, EventError, StaticEvent, EventFilter};
+use crate::events::types::{Event, EventResult, EventError, EventFilter};
 use crate::events::registry::{GlobalTypeRegistry, TypedBroadcastReceiver};
 use crate::events::api::{EventSystem, EventPublisher, EventSubscriber, FilterableSubscriber};
 

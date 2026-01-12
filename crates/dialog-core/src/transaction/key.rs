@@ -34,25 +34,15 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::str::FromStr;
 
-use rvoip_sip_core::prelude::*;
 // Removed: use rvoip_sip_core::common::Branch;
 
 use rvoip_sip_core::{
     Method,
-    Request, Response, // Added Response
-    StatusCode, // Added StatusCode
+    Request, Response, // Added StatusCode
     types::{
-        uri::Uri,
-        param::Param,
         via::Via, // Added Via
-        cseq::CSeq,
-        call_id::CallId,
-        from::From,
-        to::To,
-        address::Address,
-        headers::header_name::HeaderName, // Ensure this is the only HeaderName import
-    },
-    Version, // Added Version
+        cseq::CSeq, // Ensure this is the only HeaderName import
+    }, // Added Version
 };
 
 /// Uniquely identifies a SIP transaction.

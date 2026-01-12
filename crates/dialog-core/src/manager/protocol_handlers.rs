@@ -17,7 +17,6 @@ use tracing::debug;
 
 use rvoip_sip_core::{Request, Response, Method, StatusCode};
 use rvoip_sip_core::types::refer_to::ReferTo;
-use rvoip_sip_core::types::header::TypedHeaderTrait;
 use crate::transaction::TransactionKey;
 use crate::errors::{DialogError, DialogResult};
 use super::core::DialogManager;

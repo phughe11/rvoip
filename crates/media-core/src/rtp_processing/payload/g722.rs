@@ -4,7 +4,7 @@
 //! G.722 is defined in RFC 3551 with payload type 9.
 //! It is a wideband codec operating at 64, 56 or 48 kbit/s.
 
-use bytes::{Bytes, BytesMut};
+use bytes::Bytes;
 use std::any::Any;
 use super::traits::PayloadFormat;
 

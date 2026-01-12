@@ -4,16 +4,14 @@
 //! APP packets, BYE packets, and XR (Extended Report) packets.
 
 use std::sync::Arc;
-use std::time::Duration;
 use tokio::sync::Mutex;
-use tracing::{debug, warn, info};
+use tracing::debug;
 use bytes;
 
 use crate::api::common::error::MediaTransportError;
 use crate::api::client::transport::VoipMetrics;
 use crate::session::RtpSession;
 use crate::transport::RtpTransport;
-use crate::transport::UdpRtpTransport;
 
 /// Send an RTCP Application-Defined (APP) packet
 ///

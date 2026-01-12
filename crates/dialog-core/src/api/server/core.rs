@@ -10,7 +10,6 @@ use tracing::{info, warn};
 
 use crate::transaction::{TransactionManager, TransactionEvent};
 use crate::manager::DialogManager;
-use crate::events::SessionCoordinationEvent;
 use super::super::{ApiResult, ApiError, DialogApi, DialogStats};
 use super::super::config::ServerConfig;
 

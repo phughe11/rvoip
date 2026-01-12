@@ -3,7 +3,7 @@
 //! This module provides functions to manipulate SDP for implementing
 //! hold and resume functionality according to RFC 3264.
 
-use crate::errors::{SessionError, Result};
+use crate::errors::Result;
 use tracing::{debug, info};
 
 /// Media direction attribute for SDP
