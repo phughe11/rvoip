@@ -274,7 +274,7 @@ impl TransferHandler {
         
         // Send NOTIFY through dialog API
         self.dialog_api
-            .send_notify(dialog_id, "refer".to_string(), Some(notify_body))
+            .send_notify(dialog_id, "refer".to_string(), Some(notify_body), None)
             .await
             .map_err(|e| SessionError::internal(
                 &format!("Failed to send NOTIFY: {}", e)

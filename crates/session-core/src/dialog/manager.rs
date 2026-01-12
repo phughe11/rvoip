@@ -75,7 +75,7 @@ impl DialogManager {
     ) -> DialogResult<()> {
         // Send NOTIFY through dialog-core
         self.dialog_api
-            .send_notify(dialog_id, event, body)
+            .send_notify(dialog_id, event, body, None)
             .await
             .map_err(|e| DialogError::DialogCore {
                 source: Box::new(e),
