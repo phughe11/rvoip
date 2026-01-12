@@ -250,7 +250,7 @@ mod tests {
         let contact = ContactInfo {
             uri: "sip:alice@192.168.1.100:5060".to_string(),
             instance_id: "device-1".to_string(),
-            transport: crate::types::Transport::UDP,
+            transport: crate::types::Transport::Udp,
             user_agent: "Test UA".to_string(),
             expires: Utc::now() + Duration::hours(1),
             q_value: 1.0,
@@ -278,7 +278,7 @@ mod tests {
         let contact = ContactInfo {
             uri: "sip:bob@example.com".to_string(),
             instance_id: "device-1".to_string(),
-            transport: crate::types::Transport::TCP,
+            transport: crate::types::Transport::Tcp,
             user_agent: "Test".to_string(),
             expires: Utc::now() + Duration::hours(1),
             q_value: 1.0,

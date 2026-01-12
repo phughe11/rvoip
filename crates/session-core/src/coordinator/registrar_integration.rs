@@ -167,7 +167,7 @@ impl RegistrarIntegration {
         let contact_info = rvoip_registrar_core::types::ContactInfo {
             uri: format!("{}", contact_header),
             instance_id: format!("instance-{}", uuid::Uuid::new_v4()),
-            transport: rvoip_registrar_core::types::Transport::UDP,
+            transport: rvoip_registrar_core::types::Transport::Udp,
             user_agent: "rvoip/1.0".to_string(),
             expires: Utc::now() + Duration::seconds(expires.unwrap_or(3600) as i64),
             q_value: 1.0,
