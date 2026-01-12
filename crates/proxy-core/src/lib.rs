@@ -17,12 +17,16 @@ use anyhow::Result;
 use rvoip_dialog_core::transaction::{TransactionManager, TransactionEvent};
 use rvoip_sip_core::{Request, Response, Method, StatusCode, ResponseBuilder};
 
+mod load_balancer;
+use load_balancer::{LoadBalancer, RoundRobinLoadBalancer};
+
 /// Proxy Server
 pub struct ProxyServer {
     transaction_manager: Arc<TransactionManager>,
     running: bool,
     location_service: Arc<dyn LocationService>,
     dns_resolver: Arc<dyn DnsResolver>,
+    load_balancer: Arc<dyn LoadBalancer>,
 }
 
 impl ProxyServer {
@@ -33,6 +37,7 @@ impl ProxyServer {
             running: false,
             location_service: Arc::new(InMemoryLocationService::new()),
             dns_resolver: Arc::new(BasicDnsResolver::new()),
+            load_balancer: Arc::new(RoundRobinLoadBalancer::new()),
         }
     }
     
@@ -167,7 +172,15 @@ impl ProxyServer {
         // 3. Try DNS Resolution
         info!("Resolving domain via DNS: {}", host);
         match self.dns_resolver.resolve(&host.to_string(), port).await {
-            Ok(addr) => Ok(addr),
+            Ok(addr) => {
+                // Apply load balancing (Architectural Placeholder)
+                // In a real scenario, DNS SRV would return multiple targets
+                let candidates = vec![addr]; 
+                if let Some(selected) = self.load_balancer.select_destination(&candidates).await {
+                    return Ok(selected);
+                }
+                Ok(addr)
+            },
             Err(e) => {
                 anyhow::bail!("Failed to resolve target {}: {}", host, e);
             }

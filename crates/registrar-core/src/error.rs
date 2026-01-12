@@ -63,6 +63,10 @@ pub enum RegistrarError {
     /// Storage error (for future persistent storage)
     #[error("Storage error: {0}")]
     StorageError(String),
+
+    /// Database error
+    #[error("Database error: {0}")]
+    DatabaseError(String),
     
     /// Timeout error
     #[error("Operation timed out: {0}")]

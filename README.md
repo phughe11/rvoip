@@ -444,7 +444,8 @@ rvoip is organized into 9 core crates, each with specific responsibilities in th
 || **Call Center Operations** | 🚧 70% | Agent management, queuing, routing (PoC) |
 || **B2BUA Operations** | 🚧 60% | Basic bridging, SBC integration, hangup propagation |
 || **Media Server** | 🚧 50% | Conference mixing, DTMF, WAV playback |
-|| **SBC / Topology Hiding** | 🚧 40% | Header sanitization, rate limiting |
+|| **SBC / Topology Hiding** | 🚧 40% | Basic header stripping, rate limiting (Advanced hiding WIP) |
+|| **Proxy Services** | 🚧 40% | Basic request forwarding (Load balancing stub) |
 || **Media Quality Monitoring** | ✅ Complete | Real-time MOS scoring |
 || **Conference Mixing** | ✅ Complete | Multi-party audio mixing |
 || **Call Transfer (Blind)** | ✅ Complete | Blind transfer support |

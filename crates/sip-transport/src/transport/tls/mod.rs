@@ -69,7 +69,7 @@ impl Transport for TlsTransport {
         }
         
         // This is a placeholder implementation
-        error!("TLS transport is not fully implemented, cannot send message to {}", destination);
+        error!("CRITICAL: TLS transport is a STUB/MVP. Cannot send message to {}. This feature is not yet implemented.", destination);
         Err(Error::NotImplemented("TLS transport not fully implemented".into()))
     }
     

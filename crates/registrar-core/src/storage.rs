@@ -4,6 +4,9 @@ use async_trait::async_trait;
 use crate::error::Result;
 use crate::types::{UserRegistration, ContactInfo};
 
+pub mod sqlite;
+pub use sqlite::SqliteStorage;
+
 /// Abstract storage interface for user registrations
 /// Implement this trait for different backends (Redis, SQL, Memory, etc.)
 #[async_trait]

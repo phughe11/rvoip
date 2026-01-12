@@ -31,6 +31,8 @@ use super::handler::CallCenterCallHandler;
 // Imports for Modern Stack
 use rvoip_b2bua_core::B2buaEngine;
 
+use rvoip_infra_common::events::cross_crate::DialogToSessionEvent;
+
 /// Internal call center engine state
 ///
 /// This structure holds all the shared state components used by the call center engine.
@@ -38,8 +40,8 @@ use rvoip_b2bua_core::B2buaEngine;
 pub(super) struct CallCenterState {
     /// Configuration for the call center
     pub(super) config: CallCenterConfig,
-    /// Session coordinator for SIP operations
-    pub(super) session_coordinator: Arc<SessionCoordinator>,
+    /// Session coordinator for session-core v1 (Legacy)
+    pub(super) session_coordinator: Option<Arc<SessionCoordinator>>,
     /// Active calls tracking with detailed information
     pub(super) active_calls: Arc<DashMap<SessionId, CallInfo>>,
     /// Active SIP bridges between agents and customers
@@ -160,7 +162,7 @@ pub struct CallCenterEngine {
     /// Database manager for persistent storage
     pub(super) db_manager: Option<Arc<DatabaseManager>>,
     
-    /// Session-core coordinator integration
+    /// Session-core coordinator integration (Legacy)
     pub(super) session_coordinator: Option<Arc<SessionCoordinator>>,
 
     /// Media Server Engine (IVR & Conferencing)
@@ -363,22 +365,10 @@ impl CallCenterEngine {
             
             info!("✅ SessionCoordinator created with CallCenterCallHandler");
             
-            // Drop the placeholder as we will create the real one below (though handler still points to it weakly... wait.
-            // The handler's weak reference needs to be patched later, as done in original code.
-            // But we dropped placeholder_engine? No, `placeholder_engine` variable is dropped, but the Arc data *would* be dropped if refcount 0.
-            // `handler` holds a Weak ref.
-            
-            // Original code dropped it. And patched it later.
-            // I need to preserve the patching logic if Legacy path is taken.
-            
             drop(placeholder_engine);
             
             (Some(session_coordinator), None)
         };
-
-        // B2BUA Engine - Placeholder for future integration
-        // (Currently CallCenter uses session-core for logic, but we prepare the slot)
-        // let b2bua_engine = None; // Replaced by logic above
 
         let engine = Arc::new(Self {
             config,
@@ -399,9 +389,6 @@ impl CallCenterEngine {
         
         // Use unsafe to patch the handler if it exists
         if let Some(handler) = legacy_handler {
-            // CRITICAL FIX: Update the handler's weak reference to point to the real engine
-            // Since handler is Arc, we need to get a mutable reference
-            // We'll use unsafe to cast away the Arc's immutability for this one-time update
             unsafe {
                 let handler_ptr = Arc::as_ptr(&handler) as *mut CallCenterCallHandler;
                 (*handler_ptr).engine = Arc::downgrade(&engine);
@@ -616,21 +603,48 @@ impl CallCenterEngine {
     pub async fn start_event_monitoring(self: Arc<Self>) -> CallCenterResult<()> {
         info!("Starting session event monitoring for REGISTER and other events");
         
-        let session_manager = self.session_manager();
-        
-        // Subscribe to session events
-        let mut event_subscriber = session_manager.event_processor.subscribe().await
-            .map_err(|e| CallCenterError::orchestration(&format!("Failed to subscribe to events: {}", e)))?;
-        
-        // Spawn event processing task
-        let engine = self.clone();
-        tokio::spawn(async move {
-            while let Ok(event) = event_subscriber.receive().await {
-                if let Err(e) = engine.handle_session_event(event).await {
-                    tracing::error!("Error handling session event: {}", e);
+        if let Some(session_manager) = &self.session_coordinator {
+            // LEGACY: Use session-core v1 event processor
+            let mut event_subscriber = session_manager.event_processor.subscribe().await
+                .map_err(|e| CallCenterError::orchestration(&format!("Failed to subscribe to events: {}", e)))?;
+            
+            // Spawn event processing task
+            let engine = self.clone();
+            tokio::spawn(async move {
+                while let Ok(event) = event_subscriber.receive().await {
+                    if let Err(e) = engine.handle_session_event(event).await {
+                        tracing::error!("Error handling session event: {}", e);
+                    }
                 }
-            }
-        });
+            });
+            info!("✅ Event monitoring started (Legacy Session Core)");
+            
+        } else if let Some(b2bua) = &self.b2bua_engine {
+             // MODERN: Use B2BUA event coordinator
+             let coordinator = b2bua.event_coordinator();
+             
+             // Subscribe to "dialog_to_session" events
+             match coordinator.subscribe("dialog_to_session").await {
+                 Ok(mut rx) => {
+                    let _engine = self.clone(); // Capture for task
+                    tokio::spawn(async move {
+                        while let Some(event) = rx.recv().await {
+                            // In the future, map these events to CallCenter actions
+                             if let Some(dialog_event) = event.as_any().downcast_ref::<DialogToSessionEvent>() {
+                                 debug!("Received Modern Event: {:?}", dialog_event);
+                             }
+                        }
+                    });
+                    info!("✅ Event monitoring started (Modern B2BUA)");
+                 }
+                 Err(e) => {
+                     error!("Failed to subscribe to B2BUA events: {}", e);
+                     return Err(CallCenterError::orchestration(&format!("Failed to subscribe to B2BUA events: {}", e)));
+                 }
+             }
+        } else {
+             warn!("⚠️ No active session coordinator or B2BUA engine found. Event monitoring disabled.");
+        }
         
         Ok(())
     }
@@ -889,6 +903,34 @@ impl CallCenterEngine {
     pub async fn process_queues(&self) -> CallCenterResult<()> {
         // Implementation omitted for brevity in this task view
         Ok(())
+    }
+
+    /// Bridge a call using the Modern B2BUA Engine (if enabled)
+    /// 
+    /// This method demonstrates how the CallCenter logic will drive the B2BUA 
+    /// in the Modern architecture.
+    pub async fn bridge_call_modern(&self, call_id: &str, target: &str) -> CallCenterResult<()> {
+        if let Some(b2bua) = &self.b2bua_engine {
+            info!("Modern Mode: Bridging call {} to {} via B2BUA", call_id, target);
+            
+            // Look up the call wrapper in B2BUA
+            if let Some(call) = b2bua.get_call(call_id) {
+                // Bridge to target
+                // For 'from_uri', we use the call center's identity or the original caller
+                let from_uri = self.config.general.call_center_uri();
+                
+                b2bua.bridge_call(&call, target, &from_uri).await
+                    .map_err(|e| CallCenterError::Orchestration(format!("B2BUA bridge failed: {}", e)))?;
+                    
+                info!("✅ B2BUA bridge initiated successfully");
+                Ok(())
+            } else {
+                warn!("Call {} not found in B2BUA engine", call_id);
+                Err(CallCenterError::Orchestration(format!("Call {} not found", call_id)))
+            }
+        } else {
+            Err(CallCenterError::Orchestration("Modern B2BUA engine not enabled".to_string()))
+        }
     }
 
     /// Create a new conference room (Phase 3 Feature)

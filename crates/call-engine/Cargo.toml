@@ -23,6 +23,7 @@ workspace = true
 rvoip-sip-core.workspace = true
 rvoip-sip-transport.workspace = true
 rvoip-dialog-core.workspace = true
+rvoip-infra-common.workspace = true
 # MIGRATION NOTE: call-engine currently uses v1 for CallCenterEngine/SessionCoordinator.
 # Full migration to v3 (UnifiedCoordinator/SimplePeer) requires significant refactoring.
 # See VERSION_STRATEGY.md for migration timeline.

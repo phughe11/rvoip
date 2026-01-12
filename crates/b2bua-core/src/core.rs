@@ -203,6 +203,16 @@ impl B2buaEngine {
         &self.dialog_manager
     }
 
+    /// Access the global event coordinator
+    pub fn event_coordinator(&self) -> &Arc<GlobalEventCoordinator> {
+        &self.event_coordinator
+    }
+
+    /// Retrieve an active call by ID
+    pub fn get_call(&self, id: &str) -> Option<Arc<B2buaCall>> {
+        self.calls.get(id).map(|c| c.clone())
+    }
+
     /// Process an incoming INVITE request
     ///
     /// This creates the "Leg A" of the B2BUA call.

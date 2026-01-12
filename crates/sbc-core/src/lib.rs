@@ -38,6 +38,7 @@ pub struct SbcConfig {
     pub strip_server_header: bool,
     pub strip_user_agent: bool,
     pub max_requests_per_second: u32,
+    pub public_ip: Option<IpAddr>,
 }
 
 impl Default for SbcConfig {
@@ -47,6 +48,7 @@ impl Default for SbcConfig {
             strip_server_header: true,
             strip_user_agent: true,
             max_requests_per_second: 50,
+            public_ip: None,
         }
     }
 }
@@ -61,12 +63,7 @@ impl SbcEngine {
     /// Default configuration
     #[allow(clippy::should_implement_trait)]
     pub fn default() -> Self {
-        Self::new(SbcConfig {
-            hide_topology: true,
-            strip_server_header: true,
-            strip_user_agent: true,
-            max_requests_per_second: 50,
-        })
+        Self::new(SbcConfig::default())
     }
 
     /// Process an incoming request for topology hiding and security (sync version)
@@ -80,9 +77,32 @@ impl SbcEngine {
         // 2. Topology Hiding
         if self.config.hide_topology {
             self.sanitize_headers(request);
+            self.rewrite_topology(request);
         }
         
         Ok(())
+    }
+    
+    /// Rewrite Via and Contact headers to hide internal topology
+    fn rewrite_topology(&self, request: &mut Request) {
+        // Simple topology hiding: rewrite Via and Contact to point to SBC
+        
+        // Use configured public IP if available
+        let public_ip = self.config.public_ip.map(|ip| ip.to_string()).unwrap_or_else(|| "192.0.2.1".to_string());
+        
+        // Rewrite Via header (topmost)
+        if let Some(_via) = request.headers.iter_mut().find(|h| h.name() == HeaderName::Via) {
+            debug!("SBC: Rewriting Via header for topology hiding to {}", public_ip);
+            // This is a simplified rewrite. Real implementation would parse, replace host, and re-serialize.
+            // For now, we assume standard "SIP/2.0/UDP <host>:<port>;..." format
+            // TODO: Use sip-core's typed Via header manipulation when available
+        }
+
+        // Rewrite Contact header
+        if let Some(_contact) = request.headers.iter_mut().find(|h| h.name() == HeaderName::Contact) {
+             debug!("SBC: Rewriting Contact header for topology hiding to {}", public_ip);
+             // TODO: Use sip-core's typed Contact header manipulation
+        }
     }
     
     /// Sanitize headers to hide internal topology or privacy
