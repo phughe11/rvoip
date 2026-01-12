@@ -135,3 +135,4 @@ flake.lock
 # Before adding new lines, see the comment at the top.
 crates/codec-core/src/codecs/g729a-new/target/
 .gemini/
+openspec/
