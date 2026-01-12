@@ -136,7 +136,7 @@ impl UnifiedCoordinator {
             helpers,
             media_adapter: media_adapter.clone(),
             dialog_adapter: dialog_adapter.clone(),
-            transfer_coordinator,
+            transfer_coordinator: transfer_coordinator.clone(),
             incoming_rx: Arc::new(RwLock::new(incoming_rx)),
             config,
         });

@@ -11,7 +11,7 @@ use dasp::{Sample, Signal};
 #[cfg(feature = "format-conversion")]
 use dasp::interpolate::linear::Linear;
 #[cfg(feature = "format-conversion")]
-use dasp::signal::{self, interpolate::Converter};
+use dasp::signal::{self};
 
 /// Audio format converter using dasp
 pub struct FormatConverter {

@@ -5,19 +5,18 @@
 //! while maintaining backward compatibility with existing SessionEventProcessor.
 
 use std::sync::Arc;
-use tokio::sync::{mpsc, RwLock, broadcast};
+use tokio::sync::{mpsc, RwLock};
 use anyhow::Result;
-use tracing::{debug, info, warn, error};
+use tracing::{debug, info, error};
 
 use rvoip_infra_common::events::coordinator::{GlobalEventCoordinator, CrossCrateEventHandler};
 use rvoip_infra_common::events::cross_crate::{
-    RvoipCrossCrateEvent, SessionToDialogEvent, SessionToMediaEvent, 
-    DialogToSessionEvent, MediaToSessionEvent, CrossCrateEvent
+    RvoipCrossCrateEvent, SessionToDialogEvent, 
+    DialogToSessionEvent, CrossCrateEvent
 };
 use rvoip_infra_common::planes::LayerTaskManager;
 
 use crate::manager::events::{SessionEvent, SessionEventProcessor, SessionEventSubscriber};
-use crate::api::types::SessionId;
 use crate::errors::SessionError;
 
 /// Session Event Adapter that bridges local session events with global cross-crate events

@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicU16, AtomicU32, Ordering};
 use std::time::Instant;
 
 use crate::api::types::{SessionId, AudioFrame};
-use tracing::{debug, trace, warn};
+use tracing::{debug, trace};
 
 /// G.711 encoding results
 #[derive(Debug)]

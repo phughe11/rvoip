@@ -5,7 +5,7 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error};
 
 use crate::api::common::error::SecurityError;
 use crate::api::client::security::ClientSecurityConfig;
@@ -13,7 +13,7 @@ use crate::api::client::security::create_dtls_config as api_create_dtls_config;
 use crate::api::server::security::SocketHandle;
 use crate::dtls::{DtlsConnection, DtlsConfig, DtlsRole, DtlsVersion};
 use crate::dtls::transport::udp::UdpTransport;
-use crate::srtp::{SrtpContext, SrtpCryptoSuite, SRTP_AES128_CM_SHA1_80, SRTP_AES128_CM_SHA1_32, SRTP_NULL_NULL, SRTP_AEAD_AES_128_GCM, SRTP_AEAD_AES_256_GCM};
+use crate::srtp::SRTP_AES128_CM_SHA1_80;
 use tokio::net::UdpSocket;
 
 /// Initialize a DTLS connection with the given configuration

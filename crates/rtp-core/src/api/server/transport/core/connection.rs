@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::sync::{Mutex, RwLock, broadcast};
 use tokio::task::JoinHandle;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 use crate::api::common::error::MediaTransportError;

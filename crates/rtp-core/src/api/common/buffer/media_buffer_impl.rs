@@ -8,7 +8,6 @@ use std::time::{Duration, Instant};
 
 use tokio::sync::{Mutex, RwLock};
 use tokio::sync::Notify;
-use tracing::{debug, warn, info, error};
 
 use crate::api::common::buffer::{
     MediaBuffer, MediaBufferConfig, BufferStats

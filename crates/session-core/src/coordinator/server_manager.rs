@@ -8,7 +8,7 @@ use crate::api::{
     server::ServerSessionManager,
     bridge::{BridgeId, BridgeInfo, BridgeEvent},
 };
-use crate::errors::{Result, SessionError};
+use crate::errors::Result;
 use super::SessionCoordinator;
 
 #[async_trait]

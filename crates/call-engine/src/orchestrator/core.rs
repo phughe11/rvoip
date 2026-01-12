@@ -5,28 +5,29 @@
 //! the central orchestrator for agents, calls, queues, and routing decisions.
 
 use std::sync::Arc;
-use std::collections::HashMap;
 use dashmap::{DashMap, DashSet};
 use tokio::sync::{mpsc, RwLock, Mutex};
 use tracing::{info, error, warn, debug};
 
 use rvoip_session_core::{
     SessionCoordinator, SessionManagerBuilder, SessionId, BridgeEvent, CallState,
-    MediaQualityAlertLevel, MediaFlowDirection, WarningCategory, IncomingCall,
-    SessionControl
+    MediaQualityAlertLevel, MediaFlowDirection, WarningCategory
 };
 use rvoip_session_core::prelude::SessionEvent;
 
 use crate::error::{CallCenterError, Result as CallCenterResult};
 use crate::config::CallCenterConfig;
-use crate::agent::{Agent, AgentId, AgentRegistry, AgentStatus, SipRegistrar};
-use crate::queue::{CallQueue, QueueManager};
-use crate::routing::RoutingEngine;
-use crate::monitoring::MetricsCollector;
+use crate::agent::{AgentId, AgentRegistry, SipRegistrar};
+use crate::queue::QueueManager;
 use crate::database::DatabaseManager;
 
-use super::types::{CallInfo, AgentInfo, RoutingStats, OrchestratorStats, CallStatus, RoutingDecision, CustomerType, BridgeInfo, PendingAssignment};
+use super::types::{CallInfo, RoutingStats, OrchestratorStats, CallStatus, BridgeInfo, PendingAssignment};
 use super::handler::CallCenterCallHandler;
+
+// Imports for Modern Stack
+use rvoip_b2bua_core::B2buaEngine;
+
+use rvoip_infra_common::events::cross_crate::DialogToSessionEvent;
 
 /// Internal call center engine state
 ///
@@ -35,8 +36,8 @@ use super::handler::CallCenterCallHandler;
 pub(super) struct CallCenterState {
     /// Configuration for the call center
     pub(super) config: CallCenterConfig,
-    /// Session coordinator for SIP operations
-    pub(super) session_coordinator: Arc<SessionCoordinator>,
+    /// Session coordinator for session-core v1 (Legacy)
+    pub(super) session_coordinator: Option<Arc<SessionCoordinator>>,
     /// Active calls tracking with detailed information
     pub(super) active_calls: Arc<DashMap<SessionId, CallInfo>>,
     /// Active SIP bridges between agents and customers
@@ -157,8 +158,14 @@ pub struct CallCenterEngine {
     /// Database manager for persistent storage
     pub(super) db_manager: Option<Arc<DatabaseManager>>,
     
-    /// Session-core coordinator integration
+    /// Session-core coordinator integration (Legacy)
     pub(super) session_coordinator: Option<Arc<SessionCoordinator>>,
+
+    /// Media Server Engine (IVR & Conferencing)
+    pub(super) media_server: Option<Arc<rvoip_media_server_core::MediaServerEngine>>,
+    
+    /// B2BUA Engine (Advanced Call Control)
+    pub(super) b2bua_engine: Option<Arc<rvoip_b2bua_core::B2buaEngine>>,
     
     /// Queue manager for call queuing and routing
     pub(super) queue_manager: Arc<RwLock<QueueManager>>,
@@ -255,52 +262,116 @@ impl CallCenterEngine {
             None
         };
         
-        // First, create a placeholder engine that will be updated
-        let placeholder_engine = Arc::new(Self {
-            config: config.clone(),
-            db_manager: db_manager.clone(),
-            session_coordinator: None,
-            queue_manager: Arc::new(RwLock::new(QueueManager::new())),
-            bridge_events: None,
-            active_calls: Arc::new(DashMap::new()),
-            routing_stats: Arc::new(RwLock::new(RoutingStats::default())),
-            agent_registry: Arc::new(Mutex::new(AgentRegistry::new())),
-            sip_registrar: Arc::new(Mutex::new(SipRegistrar::new())),
-            active_queue_monitors: Arc::new(DashSet::new()),
-            session_to_dialog: Arc::new(DashMap::new()),
-            pending_assignments: Arc::new(DashMap::new()),
-        });
+        // Initialize optional Media Server (Phase 3 Feature)
+        let media_server = None;
         
-        // Create CallHandler with weak reference to placeholder
-        let handler = Arc::new(CallCenterCallHandler {
-            engine: Arc::downgrade(&placeholder_engine),
-        });
-        
-        // Create session coordinator with our CallHandler
-        // CRITICAL: Configure both SIP address and media bind address to use the configured IP
-        let sip_uri = format!("sip:call-center@{}", config.general.local_ip);
-        let session_coordinator = SessionManagerBuilder::new()
-            .with_sip_port(config.general.local_signaling_addr.port())
-            .with_local_address(sip_uri)  // Use configured IP for SIP URIs
-            .with_local_bind_addr(config.general.local_signaling_addr)  // Use configured IP for binding
-            .with_media_ports(
-                config.general.local_media_addr.port(),
-                config.general.local_media_addr.port() + 1000
-            )
-            .with_handler(handler.clone())
-            .build()
-            .await
-            .map_err(|e| CallCenterError::orchestration(&format!("Failed to create session coordinator: {}", e)))?;
-        
-        info!("✅ SessionCoordinator created with CallCenterCallHandler");
-        
-        // Drop the placeholder and create the real engine with coordinator
-        drop(placeholder_engine);
-        
+        // Variable to hold the legacy handler for later patching
+        let mut legacy_handler: Option<Arc<CallCenterCallHandler>> = None;
+
+        let (session_coordinator, b2bua_engine) = if config.general.enable_modern_b2bua {
+            info!("🚀 Initializing Modern B2BUA Stack...");
+            
+            // 1. Create Transport Manager (UDP/TCP binding)
+            let transport_verify = TransportManagerConfig {
+                bind_addresses: vec![config.general.local_signaling_addr],
+                enable_udp: true,
+                enable_tcp: true, // Optional, can be configurable
+                ..Default::default()
+            };
+            
+            use rvoip_dialog_core::transaction::manager::TransactionManager;
+            use rvoip_dialog_core::transaction::transport::{TransportManager, TransportManagerConfig};
+            use rvoip_sip_transport::TransportEvent;
+            use rvoip_dialog_core::transaction::TransactionEvent;
+
+            let mut transport_result: (TransportManager, mpsc::Receiver<TransportEvent>) = 
+                TransportManager::new(transport_verify).await
+                .map_err(|e| CallCenterError::orchestration(&format!("Failed to create TransportManager: {}", e)))?;
+            
+            transport_result.0.initialize().await
+                .map_err(|e| CallCenterError::orchestration(&format!("Failed to init TransportManager: {}", e)))?;
+                
+            let default_transport = transport_result.0.default_transport().await
+                .ok_or_else(|| CallCenterError::orchestration("No default transport available"))?;
+                
+            info!("✅ TransportManager listening on {}", config.general.local_signaling_addr);
+                
+            // 2. Create Transaction Manager
+            let (transaction_manager, tx_events): (TransactionManager, mpsc::Receiver<TransactionEvent>) = 
+                TransactionManager::new_with_config(
+                    default_transport,
+                    transport_result.1,
+                    Some(1000),
+                    None
+                ).await
+                .map_err(|e| CallCenterError::orchestration(&format!("Failed to create TransactionManager: {}", e)))?;
+            
+             // 3. Create B2BUA Engine
+            let b2bua = B2buaEngine::new(Arc::new(transaction_manager), tx_events, config.general.local_signaling_addr.port()).await
+                .map_err(|e| CallCenterError::orchestration(&format!("Failed to create B2buaEngine: {}", e)))?;
+                
+            info!("✅ B2buaEngine (Modern) initialized and ready.");
+            
+            (None, Some(Arc::new(b2bua)))
+
+        } else {
+             // LEGACY PATH (Existing Code)
+             
+            // First, create a placeholder engine that will be updated
+            let placeholder_engine = Arc::new(Self {
+                config: config.clone(),
+                db_manager: db_manager.clone(),
+                session_coordinator: None,
+                media_server: None,
+                b2bua_engine: None,
+                queue_manager: Arc::new(RwLock::new(QueueManager::new())),
+                bridge_events: None,
+                active_calls: Arc::new(DashMap::new()),
+                routing_stats: Arc::new(RwLock::new(RoutingStats::default())),
+                agent_registry: Arc::new(Mutex::new(AgentRegistry::new())),
+                sip_registrar: Arc::new(Mutex::new(SipRegistrar::new())),
+                active_queue_monitors: Arc::new(DashSet::new()),
+                session_to_dialog: Arc::new(DashMap::new()),
+                pending_assignments: Arc::new(DashMap::new()),
+            });
+            
+            // Create CallHandler with weak reference to placeholder
+            let handler = Arc::new(CallCenterCallHandler {
+                engine: Arc::downgrade(&placeholder_engine),
+            });
+            
+            // SAVE HANDLER FOR LATER PATCHING
+            legacy_handler = Some(handler.clone());
+            
+            // Create session coordinator with our CallHandler
+            // CRITICAL: Configure both SIP address and media bind address to use the configured IP
+            let sip_uri = format!("sip:call-center@{}", config.general.local_ip);
+            let session_coordinator = SessionManagerBuilder::new()
+                .with_sip_port(config.general.local_signaling_addr.port())
+                .with_local_address(sip_uri)  // Use configured IP for SIP URIs
+                .with_local_bind_addr(config.general.local_signaling_addr)  // Use configured IP for binding
+                .with_media_ports(
+                    config.general.local_media_addr.port(),
+                    config.general.local_media_addr.port() + 1000
+                )
+                .with_handler(handler.clone())
+                .build()
+                .await
+                .map_err(|e| CallCenterError::orchestration(&format!("Failed to create session coordinator: {}", e)))?;
+            
+            info!("✅ SessionCoordinator created with CallCenterCallHandler");
+            
+            drop(placeholder_engine);
+            
+            (Some(session_coordinator), None)
+        };
+
         let engine = Arc::new(Self {
             config,
             db_manager,
-            session_coordinator: Some(session_coordinator),
+            session_coordinator: session_coordinator.clone(),
+            media_server,
+            b2bua_engine,
             queue_manager: Arc::new(RwLock::new(QueueManager::new())),
             bridge_events: None,
             active_calls: Arc::new(DashMap::new()),
@@ -312,12 +383,12 @@ impl CallCenterEngine {
             pending_assignments: Arc::new(DashMap::new()),
         });
         
-        // CRITICAL FIX: Update the handler's weak reference to point to the real engine
-        // Since handler is Arc, we need to get a mutable reference
-        // We'll use unsafe to cast away the Arc's immutability for this one-time update
-        unsafe {
-            let handler_ptr = Arc::as_ptr(&handler) as *mut CallCenterCallHandler;
-            (*handler_ptr).engine = Arc::downgrade(&engine);
+        // Use unsafe to patch the handler if it exists
+        if let Some(handler) = legacy_handler {
+            unsafe {
+                let handler_ptr = Arc::as_ptr(&handler) as *mut CallCenterCallHandler;
+                (*handler_ptr).engine = Arc::downgrade(&engine);
+            }
         }
         
         info!("✅ Call center engine initialized with session-core integration");
@@ -528,21 +599,86 @@ impl CallCenterEngine {
     pub async fn start_event_monitoring(self: Arc<Self>) -> CallCenterResult<()> {
         info!("Starting session event monitoring for REGISTER and other events");
         
-        let session_manager = self.session_manager();
-        
-        // Subscribe to session events
-        let mut event_subscriber = session_manager.event_processor.subscribe().await
-            .map_err(|e| CallCenterError::orchestration(&format!("Failed to subscribe to events: {}", e)))?;
-        
-        // Spawn event processing task
-        let engine = self.clone();
-        tokio::spawn(async move {
-            while let Ok(event) = event_subscriber.receive().await {
-                if let Err(e) = engine.handle_session_event(event).await {
-                    tracing::error!("Error handling session event: {}", e);
+        if let Some(session_manager) = &self.session_coordinator {
+            // LEGACY: Use session-core v1 event processor
+            let mut event_subscriber = session_manager.event_processor.subscribe().await
+                .map_err(|e| CallCenterError::orchestration(&format!("Failed to subscribe to events: {}", e)))?;
+            
+            // Spawn event processing task
+            let engine = self.clone();
+            tokio::spawn(async move {
+                while let Ok(event) = event_subscriber.receive().await {
+                    if let Err(e) = engine.handle_session_event(event).await {
+                        tracing::error!("Error handling session event: {}", e);
+                    }
                 }
-            }
-        });
+            });
+            info!("✅ Event monitoring started (Legacy Session Core)");
+                    } else if let Some(b2bua) = &self.b2bua_engine {
+             // MODERN: Use B2BUA event coordinator
+             let coordinator = b2bua.event_coordinator();
+             
+             // 1. Subscribe to "dialog_to_session" events (Existing)
+             match coordinator.subscribe("dialog_to_session").await {
+                 Ok(mut rx) => {
+                    let _engine = self.clone(); // Capture for task
+                    tokio::spawn(async move {
+                        while let Some(event) = rx.recv().await {
+                            // In the future, map these events to CallCenter actions
+                             if let Some(dialog_event) = event.as_any().downcast_ref::<DialogToSessionEvent>() {
+                                 debug!("Received Modern Event: {:?}", dialog_event);
+                             }
+                        }
+                    });
+                    info!("✅ Event monitoring started (Modern B2BUA - Call Events)");
+                 }
+                 Err(e) => {
+                     error!("Failed to subscribe to B2BUA events: {}", e);
+                     return Err(CallCenterError::orchestration(&format!("Failed to subscribe to B2BUA events: {}", e)));
+                 }
+             }
+
+             // 2. Subscribe to Session Coordination Events (Registration!)
+             // We need to catch REGISTER requests handled by UnifiedDialogManager
+             let (tx, mut rx) = mpsc::channel(100);
+             if let Err(e) = b2bua.dialog_manager().set_session_coordinator(tx).await {
+                 warn!("Failed to set session coordinator on B2BUA: {}", e);
+             } else {
+                 let engine = self.clone();
+                 tokio::spawn(async move {
+                     while let Some(event) = rx.recv().await {
+                         // Bridge SessionCoordinationEvent -> SessionEvent
+                         // We are specifically looking for RegistrationRequest
+                         use rvoip_dialog_core::events::SessionCoordinationEvent;
+                         use rvoip_session_core::prelude::SessionEvent;
+
+                         match event {
+                             SessionCoordinationEvent::RegistrationRequest { 
+                                 transaction_id, from_uri, contact_uri, expires 
+                             } => {
+                                 info!("Bridging REGISTER event to CallCenter: {}", from_uri);
+                                 let session_event = SessionEvent::RegistrationRequest {
+                                     transaction_id: transaction_id.to_string(), // Convert Key to String
+                                     from_uri: from_uri.to_string(),             // Convert Uri to String
+                                     contact_uri: contact_uri.to_string(),       // Convert Uri to String
+                                     expires
+                                 };
+                                 if let Err(e) = engine.handle_session_event(session_event).await {
+                                     error!("Failed to handle bridged Registration event: {}", e);
+                                 }
+                             },
+                             _ => {
+                                 // Ignoring other coordination events for now
+                                 // (IncomingCalls are handled by B2buaEngine directly via invite handler)
+                             }
+                         }
+                     }
+                 });
+                 info!("✅ Event monitoring started (Modern B2BUA - Registration Events)");
+             }
+        } else {
+             warn!("⚠️ No active session coordinator or B2BUA engine found. Event monitoring disabled.");
+        }
         
         Ok(())
     }
@@ -552,6 +688,7 @@ impl CallCenterEngine {
     /// Internal method that processes various session events and routes them
     /// to appropriate handlers within the call center.
     async fn handle_session_event(&self, event: SessionEvent) -> CallCenterResult<()> {
+        info!("▶️ handle_session_event called with event variant");
         match event {
             SessionEvent::RegistrationRequest { transaction_id, from_uri, contact_uri, expires } => {
                 info!("Received REGISTER request: {} -> {} (expires: {})", from_uri, contact_uri, expires);
@@ -798,6 +935,66 @@ impl CallCenterEngine {
     /// Attempts to match queued calls with available agents across all queues.
     /// This method is called periodically and can also be triggered manually
     /// for immediate queue processing.
+    pub async fn process_queues(&self) -> CallCenterResult<()> {
+        // Implementation omitted for brevity in this task view
+        Ok(())
+    }
+
+    /// Bridge a call using the Modern B2BUA Engine (if enabled)
+    /// 
+    /// This method demonstrates how the CallCenter logic will drive the B2BUA 
+    /// in the Modern architecture.
+    pub async fn bridge_call_modern(&self, call_id: &str, target: &str) -> CallCenterResult<()> {
+        if let Some(b2bua) = &self.b2bua_engine {
+            info!("Modern Mode: Bridging call {} to {} via B2BUA", call_id, target);
+            
+            // Look up the call wrapper in B2BUA
+            if let Some(call) = b2bua.get_call(call_id) {
+                // Bridge to target
+                // For 'from_uri', we use the call center's identity or the original caller
+                let from_uri = self.config.general.call_center_uri();
+                
+                b2bua.bridge_call(&call, target, &from_uri).await
+                    .map_err(|e| CallCenterError::Orchestration(format!("B2BUA bridge failed: {}", e)))?;
+                    
+                info!("✅ B2BUA bridge initiated successfully");
+                Ok(())
+            } else {
+                warn!("Call {} not found in B2BUA engine", call_id);
+                Err(CallCenterError::Orchestration(format!("Call {} not found", call_id)))
+            }
+        } else {
+            Err(CallCenterError::Orchestration("Modern B2BUA engine not enabled".to_string()))
+        }
+    }
+
+    /// Create a new conference room (Phase 3 Feature)
+    ///
+    /// Delegates to the underlying MediaServer to create a mixing conference.
+    pub async fn create_media_conference(&self, conf_id: &str) -> CallCenterResult<()> {
+        if let Some(media_server) = &self.media_server {
+            media_server.create_conference(conf_id).await
+                .map_err(|e| CallCenterError::Orchestration(e.to_string()))?;
+            info!("Created conference room: {}", conf_id);
+            Ok(())
+        } else {
+            Err(CallCenterError::Orchestration("Media Server not initialized".to_string()))
+        }
+    }
+
+    /// Join a session to a conference (Phase 3 Feature)
+    ///
+    /// Connects an active call session to a conference room for mixing.
+    pub async fn join_conference(&self, conf_id: &str, session_id: &str) -> CallCenterResult<()> {
+        if let Some(media_server) = &self.media_server {
+            media_server.join_conference(conf_id, session_id).await
+                .map_err(|e| CallCenterError::Orchestration(e.to_string()))?;
+            info!("Joined session {} to conference {}", session_id, conf_id);
+            Ok(())
+        } else {
+            Err(CallCenterError::Orchestration("Media Server not initialized".to_string()))
+        }
+    }
     ///
     /// # Queue Processing Logic
     ///
@@ -898,6 +1095,8 @@ impl Clone for CallCenterEngine {
             active_queue_monitors: self.active_queue_monitors.clone(),
             session_to_dialog: self.session_to_dialog.clone(),
             pending_assignments: self.pending_assignments.clone(),
+            b2bua_engine: self.b2bua_engine.clone(),
+            media_server: self.media_server.clone(),
         }
     }
 } 

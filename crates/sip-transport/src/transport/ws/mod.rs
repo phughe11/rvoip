@@ -11,7 +11,7 @@ use std::sync::Arc;
 use std::collections::HashMap;
 use tokio::sync::{mpsc, Mutex};
 use futures_util::StreamExt;
-use tracing::{debug, error, info, trace, warn};
+use tracing::{debug, error, info, warn};
 
 use rvoip_sip_core::Message;
 use crate::error::{Error, Result};
@@ -86,7 +86,7 @@ impl WebSocketTransport {
             while !inner.closed.load(Ordering::Relaxed) {
                 // Accept a new connection
                 match listener_clone.accept().await {
-                    Ok((connection, mut reader)) => {
+                    Ok((connection, reader)) => {
                         let peer_addr = connection.peer_addr();
                         debug!("Accepted WebSocket connection from {}", peer_addr);
                         

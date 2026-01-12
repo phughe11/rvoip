@@ -2,7 +2,6 @@
 
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::RwLock;
 use crate::api::types::{SessionId, CallState, AudioFrame, AudioFrameSubscriber};
 use crate::api::control::SessionControl;
 use crate::api::media::MediaControl;

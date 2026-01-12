@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 use chrono::{DateTime, Utc};
 use tracing::{info, debug, warn};
 
-use crate::error::{CallCenterError, Result};
+use crate::error::Result;
 
 /// # Availability Tracker for Agent Presence Monitoring
 ///

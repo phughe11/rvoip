@@ -26,7 +26,7 @@ pub struct MediaConfigConverter {
 impl MediaConfigConverter {
     /// Create a new converter with default configuration
     pub fn new() -> Self {
-        let mut codec_mapper = CodecMapper::new();
+        let codec_mapper = CodecMapper::new();
         
         // Note: We don't pre-register Opus configurations here anymore
         // They will be registered dynamically during SDP negotiation

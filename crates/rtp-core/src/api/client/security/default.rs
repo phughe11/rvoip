@@ -7,28 +7,22 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 use std::any::Any;
-use std::collections::HashMap;
 use tokio::sync::Mutex;
 use async_trait::async_trait;
-use tracing::{debug, error, info, warn};
-use std::sync::atomic::{AtomicBool, Ordering};
+use tracing::{debug, error};
+use std::sync::atomic::AtomicBool;
 use tokio::net::UdpSocket;
-use uuid::Uuid;
 
 use crate::api::common::error::SecurityError;
-use crate::api::common::config::{SecurityInfo, SecurityMode, SrtpProfile};
-use crate::api::client::security::{ClientSecurityContext, ClientSecurityConfig, create_dtls_config};
+use crate::api::common::config::{SecurityInfo, SrtpProfile};
+use crate::api::client::security::{ClientSecurityContext, ClientSecurityConfig};
 use crate::api::server::security::SocketHandle;
-use crate::srtp::{SrtpContext, SrtpCryptoSuite, SRTP_AES128_CM_SHA1_80, SRTP_AES128_CM_SHA1_32, SRTP_NULL_NULL, SRTP_AEAD_AES_128_GCM, SRTP_AEAD_AES_256_GCM};
-use crate::srtp::crypto::SrtpCryptoKey;
+use crate::srtp::{SrtpContext, SRTP_AES128_CM_SHA1_80};
 use crate::dtls::{DtlsConnection, DtlsConfig, DtlsRole, DtlsVersion};
 use crate::dtls::transport::udp::UdpTransport;
-use crate::dtls::record::{Record, ContentType};
-use crate::dtls::message::handshake::HandshakeHeader;
 
 // Import module functions
 use crate::api::client::security::dtls::{connection, handshake, transport};
-use crate::api::client::security::srtp::keys;
 use crate::api::client::security::fingerprint::verify;
 use crate::api::client::security::packet::processor;
 

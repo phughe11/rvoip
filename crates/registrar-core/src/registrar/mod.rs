@@ -22,7 +22,12 @@ pub struct Registrar {
 impl Registrar {
     /// Create a new registrar instance
     pub fn new() -> Self {
-        let registry = Arc::new(UserRegistry::new());
+        Self::with_storage(None)
+    }
+
+    /// Create a new registrar instance with optional storage
+    pub fn with_storage(storage: Option<Arc<dyn crate::storage::Storage>>) -> Self {
+        let registry = Arc::new(UserRegistry::with_config(crate::registrar::registry::RegistryConfig::default(), storage));
         let location = Arc::new(LocationService::new());
         let manager = Arc::new(RegistrationManager::new(registry.clone()));
         

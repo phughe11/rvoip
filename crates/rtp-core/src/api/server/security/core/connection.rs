@@ -2,15 +2,13 @@
 //!
 //! This module handles the creation and management of DTLS connections.
 
-use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tracing::{debug, error, warn};
+use tracing::debug;
 
 use crate::api::common::error::SecurityError;
-use crate::api::common::config::{SrtpProfile};
-use crate::api::server::security::{ServerSecurityConfig, SocketHandle, ConnectionConfig, ConnectionRole};
-use crate::dtls::{DtlsConnection, DtlsConfig, DtlsRole};
+use crate::api::server::security::{ServerSecurityConfig, SocketHandle, ConnectionRole};
+use crate::dtls::{DtlsConnection, DtlsConfig};
 use crate::api::server::security::srtp::keys;
 use crate::api::server::security::util::conversion;
 

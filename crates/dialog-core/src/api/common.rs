@@ -523,7 +523,13 @@ impl CallHandle {
             call_id_header: dialog.call_id,
             local_tag: dialog.local_tag,
             remote_tag: dialog.remote_tag,
+            remote_sdp: dialog.remote_sdp,
         })
+    }
+
+    /// Get the remote SDP if available
+    pub async fn remote_sdp(&self) -> Option<String> {
+        self.dialog_handle.info().await.ok().and_then(|d| d.remote_sdp)
     }
     
     /// Answer the call (send 200 OK)
@@ -909,6 +915,9 @@ pub struct CallInfo {
     
     /// Remote tag
     pub remote_tag: Option<String>,
+    
+    /// Remote SDP offer
+    pub remote_sdp: Option<String>,
 }
 
 /// Dialog events that applications can listen for

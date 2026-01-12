@@ -3,7 +3,7 @@
 //! This module implements state-of-the-art AGC using multi-band processing,
 //! look-ahead limiting, and perceptual loudness models.
 
-use tracing::{debug, trace};
+use tracing::debug;
 use crate::error::{Result, AudioProcessingError};
 use crate::types::AudioFrame;
 

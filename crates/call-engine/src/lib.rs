@@ -265,6 +265,7 @@ pub mod prelude {
     
     // **UPDATED**: Core types - now using REAL CallCenterEngine
     pub use crate::{CallCenterError, CallCenterConfig, Result, CallCenterStats};
+    pub use crate::server::{CallCenterServer, CallCenterServerBuilder};
     
     // **NEW**: Real CallCenterEngine with session-core integration
     pub use crate::orchestrator::core::CallCenterEngine;

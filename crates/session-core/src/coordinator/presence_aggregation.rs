@@ -6,11 +6,11 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use chrono::{DateTime, Utc};
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 use dashmap::DashMap;
 
 use crate::coordinator::presence::{PresenceStatus, PresenceInfo};
-use crate::errors::{Result, SessionError};
+use crate::errors::Result;
 
 /// Represents a single device/instance for a user
 #[derive(Debug, Clone)]

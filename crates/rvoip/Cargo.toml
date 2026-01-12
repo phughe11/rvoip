@@ -31,8 +31,16 @@ rvoip-session-core.workspace = true
 rvoip-call-engine.workspace = true
 rvoip-client-core.workspace = true
 rvoip-sip-client.workspace = true
+rvoip-b2bua-core.workspace = true
+rvoip-proxy-core.workspace = true
+rvoip-media-server-core.workspace = true
+rvoip-sbc-core.workspace = true
+tokio.workspace = true
+tracing-subscriber.workspace = true
+tracing.workspace = true
+anyhow.workspace = true
+clap.workspace = true
 
 [dev-dependencies]
-tokio.workspace = true
 anyhow.workspace = true
 serial_test.workspace = true

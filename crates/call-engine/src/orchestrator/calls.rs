@@ -551,9 +551,7 @@
 //! ```
 
 use std::sync::Arc;
-use std::collections::HashMap;
 use tracing::{info, debug, warn, error};
-use tokio::time::{timeout, Duration};
 
 use rvoip_session_core::api::{
     types::{IncomingCall, CallDecision, SessionId, CallState},
@@ -563,7 +561,7 @@ use rvoip_session_core::api::{
 
 use crate::agent::{AgentId, AgentStatus};
 use crate::error::{CallCenterError, Result as CallCenterResult};
-use crate::queue::{QueuedCall, QueueStats};
+use crate::queue::QueuedCall;
 use super::core::CallCenterEngine;
 use super::types::{CallInfo, CallStatus, CustomerType, RoutingDecision, PendingAssignment, AgentInfo};
 
@@ -579,7 +577,23 @@ impl CallCenterEngine {
         let total_agents = if let Some(db_manager) = &self.db_manager {
             db_manager.count_total_agents().await.unwrap_or_default()
         } else {
-            0
+            // Fallback: check memory registrar
+            let count = self.sip_registrar.lock().await.list_registrations().len() as i64;
+            if count > 0 {
+                info!("ℹ️ Database manager unavailable, using memory registrar count: {}", count);
+            }
+            count
+        };
+        
+        // Final fallback if database returned 0 but memory has agents
+        let total_agents = if total_agents == 0 {
+            let count = self.sip_registrar.lock().await.list_registrations().len() as i64;
+            if count > 0 {
+                info!("ℹ️ Database reported 0 agents, but memory registrar has: {}", count);
+            }
+            count
+        } else {
+            total_agents
         };
         
         if total_agents == 0 {
@@ -618,7 +632,7 @@ impl CallCenterEngine {
         }
         
         // Store the call information
-        let mut call_info = CallInfo {
+        let call_info = CallInfo {
             session_id: session_id.clone(),
             caller_id: call.from.clone(),
             from: call.from.clone(),
@@ -657,16 +671,20 @@ impl CallCenterEngine {
         // Generate B2BUA's SDP answer for the customer
         let sdp_answer = if let Some(ref customer_sdp) = call.sdp {
             // Generate our SDP answer based on customer's offer
-            match self.session_coordinator.as_ref().unwrap()
-                .generate_sdp_answer(&session_id, customer_sdp).await {
-                Ok(answer) => {
-                    info!("✅ Generated SDP answer for customer ({} bytes)", answer.len());
-                    Some(answer)
+            if let Some(coordinator) = &self.session_coordinator {
+                match coordinator.generate_sdp_answer(&session_id, customer_sdp).await {
+                    Ok(answer) => {
+                        info!("✅ Generated SDP answer for customer ({} bytes)", answer.len());
+                        Some(answer)
+                    }
+                    Err(e) => {
+                        error!("Failed to generate SDP answer: {}", e);
+                        None
+                    }
                 }
-                Err(e) => {
-                    error!("Failed to generate SDP answer: {}", e);
-                    None
-                }
+            } else {
+                warn!("⚠️ Session coordinator not available to generate SDP answer");
+                None
             }
         } else {
             warn!("⚠️ No SDP from customer, accepting without SDP");
@@ -935,7 +953,8 @@ impl CallCenterEngine {
         };
         
         // Now proceed with the SIP call setup
-        let coordinator = self.session_coordinator.as_ref().unwrap();
+        let coordinator = self.session_coordinator.as_ref()
+            .ok_or_else(|| CallCenterError::orchestration("Session coordinator unavailable for agent assignment"))?;
         
         // Verify customer session is ready
         match coordinator.find_session(&session_id).await {
@@ -1319,8 +1338,10 @@ impl CallCenterEngine {
         // Clean up bridge if call had one
         if let Some(call_info) = &call_info {
             if let Some(bridge_id) = &call_info.bridge_id {
-                if let Err(e) = self.session_coordinator.as_ref().unwrap().destroy_bridge(&bridge_id).await {
-                    warn!("Failed to destroy bridge {}: {}", bridge_id, e);
+                if let Some(coordinator) = &self.session_coordinator {
+                    if let Err(e) = coordinator.destroy_bridge(&bridge_id).await {
+                        warn!("Failed to destroy bridge {}: {}", bridge_id, e);
+                    }
                 }
             }
         }
@@ -1459,7 +1480,9 @@ impl CallCenterEngine {
                 if duration.num_seconds() > 5 {  // Stuck for more than 5 seconds
                     warn!("⚠️ Found stuck call {} in Connecting state for {}s", 
                           session_id, duration.num_seconds());
-                    stuck_calls.push((session_id.clone(), call_info.queue_id.clone().unwrap()));
+                    if let Some(qid) = &call_info.queue_id {
+                        stuck_calls.push((session_id.clone(), qid.clone()));
+                    }
                 }
             }
         }

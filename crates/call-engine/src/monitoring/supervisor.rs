@@ -6,13 +6,12 @@
 
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::{info, warn, error};
+use tracing::{info, warn};
 use chrono::{DateTime, Utc};
 
-use crate::error::{CallCenterError, Result};
+use crate::error::Result;
 use crate::orchestrator::CallCenterEngine;
-use crate::agent::{Agent, AgentId, AgentStatus};
-use crate::queue::QueueStats;
+use crate::agent::AgentStatus;
 
 /// # Supervisor Monitor for Call Center Oversight
 ///

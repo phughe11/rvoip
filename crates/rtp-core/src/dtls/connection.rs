@@ -15,7 +15,7 @@ use super::srtp::extractor::{DtlsSrtpContext, extract_srtp_keys_from_dtls};
 use super::transport::udp::UdpTransport;
 use super::message::extension::SrtpProtectionProfile;
 use super::message::handshake::HandshakeMessage;
-use super::record::{Record, ContentType};
+use super::record::Record;
 
 /// DTLS connection state
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -157,7 +157,7 @@ impl DtlsConnection {
         // Create a separate async function to handle the handshake
         let handle_handshake = async move {
             // Create a new handshake state machine
-            let mut handshake = super::handshake::HandshakeState::new(role, version, max_retransmissions);
+            let handshake = super::handshake::HandshakeState::new(role, version, max_retransmissions);
             
             // Initialize transport handler
             struct HandshakeHandler {

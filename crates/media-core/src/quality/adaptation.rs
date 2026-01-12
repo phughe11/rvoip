@@ -3,8 +3,7 @@
 //! This module implements adaptive quality management that automatically adjusts
 //! media parameters based on real-time quality monitoring and network conditions.
 
-use tracing::{debug, info, warn};
-use crate::error::Result;
+use tracing::debug;
 use crate::types::{MediaSessionId, SampleRate};
 use super::metrics::{QualityMetrics, QualityTrend, QualityGrade};
 

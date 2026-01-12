@@ -526,13 +526,12 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use tracing::{debug, info, error, warn};
 use rvoip_session_core::{IncomingCall, SessionId};
-use uuid::Uuid;
 
-use crate::agent::{Agent, AgentId, AgentStatus};
+use crate::agent::{AgentId, AgentStatus};
 use crate::error::{Result as CallCenterResult, CallCenterError};
 use crate::queue::QueuedCall;
 use super::core::CallCenterEngine;
-use super::types::{CustomerType, RoutingDecision, AgentInfo};
+use super::types::{CustomerType, RoutingDecision};
 
 impl CallCenterEngine {
     /// Analyze customer information to determine routing requirements
@@ -617,25 +616,29 @@ impl CallCenterEngine {
     
     /// Find the best available agent based on skills and performance
     pub(super) async fn find_best_available_agent(&self, required_skills: &[String], priority: u8) -> Option<AgentId> {
-        // Get available agents from database
-        let db_manager = self.db_manager.as_ref()?;
-        
-        let mut suitable_agents = match db_manager.get_available_agents().await {
-            Ok(agents) => agents
-                .into_iter()
-                .filter(|agent| {
-                    // Filter by skills if specific skills are required
-                    // TODO: Add skills table and filtering in database
-                    required_skills.is_empty() || required_skills.contains(&"general".to_string())
-                })
-                .collect::<Vec<_>>(),
-            Err(e) => {
-                error!("Failed to get available agents from database: {}", e);
-                return None;
+        // Try database first
+        let mut suitable_agents = if let Some(db_manager) = &self.db_manager {
+            match db_manager.get_available_agents().await {
+                Ok(agents) => agents.into_iter().collect::<Vec<_>>(),
+                Err(e) => {
+                    error!("Failed to get available agents from database: {}", e);
+                    Vec::new()
+                }
             }
+        } else {
+            Vec::new()
         };
         
+        // Fallback to memory registry if database returns nothing
         if suitable_agents.is_empty() {
+            let registration_count = self.sip_registrar.lock().await.list_registrations().len();
+            if registration_count > 0 {
+                info!("ℹ️ Fallback: No agents in database, but {} agents in memory", registration_count);
+                // Return the first available agent from memory for now
+                if let Some((aor, _)) = self.sip_registrar.lock().await.list_registrations().first() {
+                    return Some(AgentId(aor.to_string()));
+                }
+            }
             debug!("❌ No suitable agents found for skills: {:?}", required_skills);
             return None;
         }
@@ -754,12 +757,12 @@ impl CallCenterEngine {
     
     /// Get list of available agents (excludes agents in post-call wrap-up)
     async fn get_available_agents(&self) -> Vec<AgentId> {
-        if let Some(db_manager) = &self.db_manager {
+        let mut agents = if let Some(db_manager) = &self.db_manager {
             match db_manager.get_available_agents().await {
                 Ok(agents) => agents
                     .into_iter()
                     .map(|agent| AgentId::from(agent.agent_id))
-                    .collect(),
+                    .collect::<Vec<_>>(),
                 Err(e) => {
                     error!("Failed to get available agents from database: {}", e);
                     vec![]
@@ -767,7 +770,21 @@ impl CallCenterEngine {
             }
         } else {
             vec![]
+        };
+        
+        // Fallback to memory
+        if agents.is_empty() {
+            agents = self.sip_registrar.lock().await.list_registrations()
+                .into_iter()
+                .map(|(aor, _)| AgentId(aor.to_string()))
+                .collect();
+            
+            if !agents.is_empty() {
+                info!("ℹ️ Routing fallback to {} memory-registered agents", agents.len());
+            }
         }
+        
+        agents
     }
     
     /// Process database assignments (DISABLED - using FULL ROUTING instead)

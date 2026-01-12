@@ -1,31 +1,3 @@
-/// # Transaction Validators
-///
-/// This module provides validation functions that ensure SIP messages conform to the
-/// transaction matching rules defined in RFC 3261. These validators help enforce the
-/// correct association between requests, responses, and transactions.
-///
-/// ## RFC 3261 Context
-///
-/// RFC 3261 Section 17.1.3 defines strict rules for matching responses to client transactions:
-///
-/// > When the transport layer receives a response, it has to determine which client
-/// > transaction will handle the response, so that the processing of Sections 17.1.1
-/// > and 17.1.2 can take place. The branch parameter in the top Via header field
-/// > is used for this purpose. A response matches a client transaction under two
-/// > conditions:
-/// >
-/// > 1. If the response has the same value of the branch parameter in the top Via
-/// >    header field as the branch parameter in the top Via header field of the
-/// >    request that created the transaction.
-/// >
-/// > 2. If the method parameter in the CSeq header field matches the method of
-/// >    the request that created the transaction. The method is needed since a
-/// >    CANCEL request constitutes a different transaction, but shares the same
-/// >    value of the branch parameter.
-///
-/// This module implements these rules to ensure proper transaction matching.
-
-use std::sync::Arc;
 use tracing::{trace, warn};
 
 use rvoip_sip_core::prelude::*;

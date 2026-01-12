@@ -7,18 +7,17 @@ use axum::{
     Router,
     routing::{get, post, put, delete},
     extract::{State, Path, Query, Json, FromRef},
-    http::{StatusCode, HeaderMap, header, Request},
+    http::{StatusCode, header},
     response::{IntoResponse, Response},
-    middleware::{self, Next},
+    middleware::{self},
 };
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
-use std::collections::HashMap;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use tower_http::cors::CorsLayer;
 use crate::{
     AuthenticationService, CreateUserRequest, UpdateUserRequest, UserFilter,
-    api_keys::CreateApiKeyRequest, UserClaims, Error as UsersError,
+    api_keys::CreateApiKeyRequest, Error as UsersError,
 };
 use chrono::{DateTime, Utc};
 use jsonwebtoken::{decode, Algorithm, Validation, DecodingKey};

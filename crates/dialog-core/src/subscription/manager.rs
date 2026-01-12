@@ -5,22 +5,16 @@
 
 use std::sync::Arc;
 use std::time::Duration;
-use std::collections::HashMap;
 use std::net::SocketAddr;
 use tokio::sync::{RwLock, mpsc};
 use tokio::task::JoinHandle;
-use tracing::{debug, info, warn, error};
+use tracing::debug;
 use dashmap::DashMap;
 
 use rvoip_sip_core::{
-    Request, Response, Method, StatusCode,
+    Request, Response, StatusCode,
     TypedHeader, HeaderName,
-    types::{
-        event::Event,
-        expires::Expires,
-        subscription_state::SubscriptionState as SubscriptionStateHeader,
-    },
-    builder::{SimpleRequestBuilder, SimpleResponseBuilder},
+    builder::SimpleResponseBuilder,
 };
 
 use crate::dialog::{DialogId, Dialog, DialogState, SubscriptionState, SubscriptionTerminationReason};

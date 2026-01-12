@@ -3,17 +3,14 @@
 //! This module handles RTCP sender and receiver reports.
 
 use std::collections::HashMap;
-use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::{Mutex, RwLock};
-use tracing::{debug, warn};
+use tokio::sync::RwLock;
+use tracing::warn;
 
 use crate::api::common::error::MediaTransportError;
 use crate::api::client::transport::RtcpStats;
 use crate::api::server::transport::core::connection::ClientConnection;
-use crate::session::RtpSession;
-use crate::transport::UdpRtpTransport;
 
 /// Send RTCP receiver report to all clients
 pub async fn send_rtcp_receiver_report(
@@ -87,7 +84,7 @@ pub async fn send_rtcp_receiver_report_to_client(
     }
     
     // Send RTCP receiver report
-    let mut session = client.session.lock().await;
+    let session = client.session.lock().await;
     session.send_receiver_report().await
         .map_err(|e| MediaTransportError::RtcpError(format!("Failed to send RTCP receiver report: {}", e)))
 }
@@ -108,7 +105,7 @@ pub async fn send_rtcp_sender_report_to_client(
     }
     
     // Send RTCP sender report
-    let mut session = client.session.lock().await;
+    let session = client.session.lock().await;
     session.send_sender_report().await
         .map_err(|e| MediaTransportError::RtcpError(format!("Failed to send RTCP sender report: {}", e)))
 }

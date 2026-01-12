@@ -1,5 +1,4 @@
-use bytes::{Buf, BufMut, Bytes, BytesMut};
-use std::time::{Duration, Instant};
+use bytes::{Buf, BufMut, BytesMut};
 
 use crate::error::Error;
 use crate::{Result, RtpSsrc};

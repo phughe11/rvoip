@@ -11,7 +11,7 @@ use tokio::sync::{RwLock, Mutex};
 use tracing::{debug, error, info, warn};
 
 use crate::codec::mapping::CodecMapper;
-use crate::codec::transcoding::{Transcoder, TranscodingSession, TranscodingPath};
+use crate::codec::transcoding::Transcoder;
 use crate::processing::format::FormatConverter;
 use crate::types::{DialogId, AudioFrame};
 use crate::error::{Error, Result};

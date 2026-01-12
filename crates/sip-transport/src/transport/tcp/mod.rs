@@ -10,9 +10,8 @@ use std::fmt;
 use std::net::SocketAddr;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::collections::HashMap;
-use tokio::sync::{mpsc, Mutex};
-use tracing::{debug, error, info, trace, warn};
+use tokio::sync::mpsc;
+use tracing::{debug, error, info, trace};
 
 use rvoip_sip_core::Message;
 use crate::error::{Error, Result};

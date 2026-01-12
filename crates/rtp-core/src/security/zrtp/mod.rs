@@ -21,7 +21,6 @@ pub mod packet;
 pub mod hash;
 
 use packet::{ZrtpPacket, ZrtpMessageType, ZrtpVersion};
-use hash::ZrtpHash as ZrtpHashFunctions;
 
 /// ZRTP cipher algorithms
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

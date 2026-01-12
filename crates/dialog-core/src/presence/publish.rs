@@ -2,16 +2,15 @@
 //!
 //! Provides support for publishing presence information to a presence server.
 
-use std::sync::Arc;
 use std::time::Duration;
 use bytes::Bytes;
 use rvoip_sip_core::{
     Request, Method, HeaderName, TypedHeader, Uri, HeaderValue,
     types::pidf::PidfDocument,
 };
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
-use crate::{Dialog, DialogId, DialogResult, DialogError};
+use crate::{DialogResult, DialogError};
 
 /// PUBLISH request builder for presence updates
 pub struct PublishBuilder {

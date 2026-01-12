@@ -6,12 +6,12 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tokio::sync::{Mutex, Notify, Semaphore};
+use tokio::sync::Notify;
 use crate::packet::RtpPacket;
 use crate::RtpSequenceNumber;
-use tracing::{debug, warn, info, trace};
+use tracing::{debug, trace};
 
-use super::{BufferLimits, GlobalBufferManager, MemoryPermit};
+use super::GlobalBufferManager;
 
 /// Default jitter buffer size in milliseconds
 pub const DEFAULT_JITTER_BUFFER_SIZE_MS: u32 = 50;

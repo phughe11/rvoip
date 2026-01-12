@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use bytes::BytesMut;
 use tokio::net::UdpSocket;
-use tracing::{debug, error, trace};
+use tracing::trace;
 
 use crate::error::{Error, Result};
 

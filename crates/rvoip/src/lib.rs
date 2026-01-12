@@ -47,7 +47,7 @@
 // Re-export all crates as modules
 pub use rvoip_sip_core as sip_core;
 pub use rvoip_sip_transport as sip_transport;
-pub use rvoip_transaction_core as transaction_core;
+// transaction-core has been merged into dialog-core
 pub use rvoip_dialog_core as dialog_core;
 pub use rvoip_rtp_core as rtp_core;
 pub use rvoip_media_core as media_core;

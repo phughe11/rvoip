@@ -1,68 +1,3 @@
-/// # INVITE Client Transaction Implementation
-///
-/// This module implements the INVITE client transaction state machine as defined in
-/// [RFC 3261 Section 17.1.1](https://datatracker.ietf.org/doc/html/rfc3261#section-17.1.1).
-///
-/// ## State Machine
-///
-/// The INVITE client transaction follows this state machine:
-///
-/// ```text
-///                                         |INVITE from TU
-///                Timer A fires            |INVITE sent
-///                Reset A,                 V
-///                INVITE sent +-----------+
-///                  +---------|           |-------------------+
-///                  |         |  Calling  |  Timer B fires    |
-///                  +-------->|           |  or Transport Err.|
-///                            +-----------+  inform TU        |
-///                               |  |                         |
-///                               |  |1xx                      |
-///                               |  |from                     |
-///                               |  |TU                       V
-///                            1xx|  |                   +-----------+
-///                            from|  |                   |           |
-///                            TL  |  |                   | Terminated|
-///                               |  |                    |           |
-///                               |  |                    +-----------+
-///                               |  |
-///                               |  |
-///                               |  |                      300-699 from TL
-///                               |  |                      ACK sent, resp. to TU
-///                               |  |                         +----+
-///                               |  |                         |    |
-///                               |  |                         V    |
-///                 +-----------+ |  |      Timer D fires  +-----------+
-///                 |           |<|--|-------------------+|           |
-///                 |Proceeding |--+  |                   | Completed |
-///                 |           |<----+                   |           |
-///                 +-----------+                         +-----------+
-///                   |      |                            ^      |
-///                   |      |                            |      |
-///                   |      +-------------+              |      |
-///                   |                    |              |      |
-///                   |                    |              |      |
-///                   |                    |              |      |
-///    300-699 from TL|                    |2xx from TL   |      |2xx from TL
-///     resp. to TU   |                    |resp. to TU   |      |resp. to TU
-///                   |                    |              |      |
-///                   V                    V              |      |
-///             +-----------+        +-----------+        |      |
-///             |           |        |           |<-------+      |
-///             | Completed |        | Terminated|<--------------+
-///             |           |        |           |
-///             +-----------+        +-----------+
-/// ```
-///
-/// ## Timers
-///
-/// INVITE client transactions use the following timers:
-///
-/// - **Timer A**: Initial value T1, doubles on each retransmission. Controls request retransmissions in Calling state.
-/// - **Timer B**: Typically 64*T1. Controls transaction timeout. When it fires, the transaction terminates with an error.
-/// - **Timer D**: Typically 32s, but can be shorter. Controls how long to wait for retransmissions of the final response.
-
-use std::fmt;
 use std::future::Future;
 use std::net::SocketAddr;
 use std::pin::Pin;
@@ -86,7 +21,7 @@ use crate::transaction::client::{
 };
 use crate::transaction::utils;
 use crate::transaction::logic::TransactionLogic;
-use crate::transaction::runner::{run_transaction_loop, HasCommandSender, AsRefKey};
+use crate::transaction::runner::run_transaction_loop;
 // Add imports for our utility modules
 use crate::transaction::timer_utils;
 use crate::transaction::validators;

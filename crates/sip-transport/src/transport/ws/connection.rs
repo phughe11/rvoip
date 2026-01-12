@@ -1,19 +1,16 @@
 use std::io;
 use std::net::SocketAddr;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
-use bytes::{BytesMut, Buf};
-use futures_util::stream::{SplitSink, SplitStream};
+use futures_util::stream::SplitSink;
 use futures_util::SinkExt;
-use futures_util::StreamExt;
 use tokio::net::TcpStream;
 use tokio::sync::Mutex;
-use tracing::{debug, error, trace, warn};
+use tracing::{debug, trace, warn};
 
 #[cfg(feature = "ws")]
 use tokio_tungstenite::{tungstenite, WebSocketStream, MaybeTlsStream};
 #[cfg(feature = "ws")]
-use tokio_tungstenite::tungstenite::protocol::{Message as WsMessage, Role};
+use tokio_tungstenite::tungstenite::protocol::Message as WsMessage;
 
 use rvoip_sip_core::{Message, parse_message};
 use crate::error::{Error, Result};

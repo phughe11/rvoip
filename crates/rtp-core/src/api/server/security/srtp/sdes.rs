@@ -15,7 +15,6 @@ use crate::api::common::config::{SrtpProfile, SecurityConfig, SecurityInfo, Secu
 use crate::api::server::security::{ServerSecurityContext, ClientSecurityContext, ServerSecurityConfig, SocketHandle};
 use crate::security::{SecurityKeyExchange, sdes::{Sdes, SdesConfig, SdesRole, SdesCryptoAttribute}};
 use crate::srtp::{SrtpContext, SrtpCryptoSuite, SRTP_AES128_CM_SHA1_80, SRTP_AES128_CM_SHA1_32};
-use crate::srtp::crypto::SrtpCryptoKey;
 
 /// SDES server configuration
 #[derive(Debug, Clone)]

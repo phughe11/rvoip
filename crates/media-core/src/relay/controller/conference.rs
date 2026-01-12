@@ -5,7 +5,7 @@
 
 use std::sync::Arc;
 use tokio::sync::mpsc;
-use tracing::{debug, info};
+use tracing::info;
 
 use crate::error::{Error, Result};
 use crate::types::{DialogId, AudioFrame};

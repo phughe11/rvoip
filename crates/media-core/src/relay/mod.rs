@@ -8,10 +8,10 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::{RwLock, mpsc};
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info};
 use uuid::Uuid;
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 
 // Controller module for session-core integration
 pub mod controller;

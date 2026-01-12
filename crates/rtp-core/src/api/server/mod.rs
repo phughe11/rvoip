@@ -18,7 +18,6 @@ pub use security::DefaultServerSecurityContext;
 // Import errors
 use crate::api::common::error::MediaTransportError;
 
-use std::sync::Arc;
 
 /// Factory for creating media transport servers
 pub struct ServerFactory;

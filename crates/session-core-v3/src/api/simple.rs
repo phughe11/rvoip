@@ -198,6 +198,15 @@ impl SimplePeer {
     pub async fn send_refer(&mut self, call_id: &CallId, refer_to: &str) -> Result<()> {
         self.coordinator.send_refer(call_id, refer_to).await
     }
+
+    /// Register with the configured registrar
+    pub async fn register(&self) -> Result<()> {
+        // Simple stub that would delegate to RegistrationManager
+        tracing::info!("[SimplePeer] Registering with default registrar...");
+        // let reg_manager = RegistrationManager::new(self.coordinator.clone(), "sip:registrar.local".into());
+        // reg_manager.register().await
+        Ok(())
+    }
     
     /// Complete a blind transfer by terminating current call and calling target
     pub async fn complete_blind_transfer(

@@ -2,7 +2,6 @@
 //!
 //! Types for session bridging.
 
-use crate::api::types::SessionId;
 
 /// Bridge identifier
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

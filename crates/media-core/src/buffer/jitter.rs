@@ -4,13 +4,12 @@
 //! packet reordering, network jitter compensation, and smooth audio playback.
 
 use std::collections::BTreeMap;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use tokio::sync::RwLock;
 use tracing::{debug, warn, trace};
 
-use crate::error::{Result, BufferError};
+use crate::error::Result;
 use crate::types::{AudioFrame, MediaPacket};
-use crate::quality::metrics::QualityMetrics;
 
 /// Jitter buffer configuration
 #[derive(Debug, Clone)]

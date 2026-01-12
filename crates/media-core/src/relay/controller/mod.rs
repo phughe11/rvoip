@@ -17,50 +17,36 @@
 //! Use `set_audio_muted()` and `is_audio_muted()` for muting functionality.
 
 use std::collections::HashMap;
-use std::net::SocketAddr;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, error, info, warn};
-use rand::Rng;
 use dashmap::DashMap;
 
 use crate::error::{Error, Result};
-use crate::types::{DialogId, MediaSessionId, AudioFrame, payload_types};
+use crate::types::{DialogId, MediaSessionId, AudioFrame};
 use crate::types::conference::{
-    ParticipantId, AudioStream, ConferenceMixingConfig, ConferenceMixingStats,
-    ConferenceError, ConferenceResult, ConferenceMixingEvent, MixingQuality
+    ConferenceMixingConfig, ConferenceMixingEvent
 };
-use crate::processing::audio::{AudioMixer, AudioStreamManager};
+use crate::processing::audio::AudioMixer;
 use crate::quality::QualityMonitor;
-use crate::integration::{RtpBridge, RtpBridgeConfig, RtpEventCallback, IntegrationEvent};
+use crate::integration::{RtpBridge, RtpBridgeConfig, RtpEventCallback};
 use crate::relay::controller::codec_detection::CodecDetector;
 use crate::relay::controller::codec_fallback::CodecFallbackManager;
 use crate::performance::{
     metrics::PerformanceMetrics,
-    pool::{AudioFramePool, PoolConfig, PoolStats, RtpBufferPool, PooledRtpBuffer},
+    pool::{AudioFramePool, PoolConfig, RtpBufferPool},
     simd::SimdProcessor,
-    zero_copy::ZeroCopyAudioFrame,
-};
-use crate::processing::audio::{
-    AdvancedVoiceActivityDetector, AdvancedVadConfig,
-    AdvancedAutomaticGainControl, AdvancedAgcConfig,
-    AdvancedAcousticEchoCanceller, AdvancedAecConfig,
-    AdvancedVadResult, AdvancedAgcResult, AdvancedAecResult
 };
 use crate::codec::audio::G711Codec;
 use crate::codec::audio::common::AudioCodec;
-use codec_core::codecs::g711::G711Variant;
 use crate::codec::mapping::CodecMapper;
-use crate::types::SampleRate;
 
 use rvoip_rtp_core::{RtpSession, RtpSessionConfig};
-use rvoip_rtp_core::session::{RtpSessionStats, RtpStreamStats};
-use rvoip_rtp_core::transport::{GlobalPortAllocator, PortAllocator, PortAllocatorConfig, AllocationStrategy};
+use rvoip_rtp_core::transport::{GlobalPortAllocator, PortAllocator, PortAllocatorConfig};
 use rvoip_rtp_core as rtp_core;
-use rvoip_rtp_core::{RtpPacket, RtpHeader};
 
-use super::{MediaRelay, RelaySessionConfig, RelayEvent, RelayStats, generate_session_id, create_relay_config};
+use super::MediaRelay;
 
 // Sub-modules
 pub mod types;
@@ -84,7 +70,6 @@ pub use types::{
 };
 
 use types::RtpSessionWrapper;
-use audio_generation::{AudioGenerator, AudioTransmitter};
 
 /// Media Session Controller for managing media sessions and conference audio mixing
 pub struct MediaSessionController {

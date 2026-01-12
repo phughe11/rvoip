@@ -17,9 +17,6 @@ use crate::srtp::crypto::SrtpCryptoKey;
 use rand::{RngCore, rngs::OsRng};
 use hmac::{Hmac, Mac};
 use sha2::{Sha256, Digest};
-use rsa::{RsaPublicKey, RsaPrivateKey, Oaep};
-use rsa::pkcs1::{DecodeRsaPublicKey, EncodeRsaPublicKey};
-use rsa::pkcs8::{DecodePrivateKey, EncodePrivateKey};
 use x509_parser::prelude::*;
 
 pub mod message;

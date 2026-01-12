@@ -2,7 +2,6 @@
 //!
 //! Routes events efficiently between planes based on affinity and deployment
 
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use anyhow::Result;

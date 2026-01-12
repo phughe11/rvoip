@@ -56,8 +56,7 @@
 /// transaction state machines.
 
 use std::net::SocketAddr;
-use std::fmt;
-use rvoip_sip_core::prelude::{Request, Response, Message, Method, StatusCode, Uri, Version};
+use rvoip_sip_core::prelude::{Request, Response};
 
 use crate::transaction::{TransactionKey, TransactionState};
 

@@ -1,6 +1,5 @@
 use std::fmt;
 use std::net::SocketAddr;
-use std::sync::Arc;
 
 use rvoip_sip_core::Message;
 use crate::error::Result;

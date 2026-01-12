@@ -10,14 +10,13 @@ use bytes::{Bytes, BytesMut, BufMut};
 // Add crypto imports
 use aes::{Aes128, Aes256};
 use aes::cipher::{
-    BlockCipher, BlockEncrypt, BlockDecrypt,
+    BlockEncrypt, BlockDecrypt,
     KeyInit, Key,
 };
 use aes_gcm::{
-    Aes128Gcm, Aes256Gcm, AesGcm, KeySizeUser,
-    aead::{Aead, Payload, Tag, Nonce}
+    Aes128Gcm, Aes256Gcm,
+    aead::{Aead, Payload, Nonce}
 };
-use ctr::{Ctr128BE, Ctr32BE};
 use hmac::{Hmac, Mac};
 use sha1::Sha1;
 use sha2::{Sha256, Sha384};

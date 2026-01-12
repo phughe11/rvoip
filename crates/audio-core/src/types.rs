@@ -5,7 +5,6 @@
 
 use std::fmt;
 use std::time::Duration;
-use uuid::Uuid;
 use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
 

@@ -5,12 +5,12 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tracing::{debug, error, warn};
+use tracing::{debug, error};
 
 use crate::api::common::error::SecurityError;
 use crate::api::common::config::{SrtpProfile};
 use crate::dtls::DtlsConnection;
-use crate::srtp::{SrtpContext, SrtpCryptoSuite, SrtpCryptoKey};
+use crate::srtp::{SrtpContext, SrtpCryptoSuite};
 use crate::srtp::{SRTP_AES128_CM_SHA1_80, SRTP_AES128_CM_SHA1_32, SRTP_AEAD_AES_128_GCM, SRTP_AEAD_AES_256_GCM};
 
 /// Extract SRTP keys from a DTLS connection

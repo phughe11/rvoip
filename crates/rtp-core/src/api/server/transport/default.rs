@@ -6,34 +6,30 @@
 use std::collections::HashMap;
 use std::net::{SocketAddr, UdpSocket};
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
-use std::any::Any;
+use std::time::Duration;
 
 use async_trait::async_trait;
-use bytes::Bytes;
-use tokio::sync::{mpsc, Mutex, RwLock, broadcast};
+use tokio::sync::{Mutex, RwLock, broadcast};
 use tokio::task::JoinHandle;
 use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
 use crate::api::common::frame::MediaFrame;
 use crate::api::common::error::MediaTransportError;
-use crate::api::common::events::{MediaEventCallback, MediaTransportEvent};
-use crate::api::common::stats::{MediaStats, QualityLevel, StreamStats, Direction};
+use crate::api::common::events::MediaEventCallback;
+use crate::api::common::stats::MediaStats;
 use crate::api::common::config::{SecurityInfo, SecurityMode};
-use crate::api::common::frame::MediaFrameType;
 use crate::api::common::extension::ExtensionFormat;
 use crate::api::server::transport::{MediaTransportServer, ClientInfo, HeaderExtension};
-use crate::api::server::security::{ServerSecurityContext, ClientSecurityContext, DefaultServerSecurityContext};
+use crate::api::server::security::{ServerSecurityContext, ClientSecurityContext};
 use crate::api::server::config::ServerConfig;
 use crate::api::client::transport::{RtcpStats, VoipMetrics};
-use crate::session::{RtpSession, RtpSessionConfig, RtpSessionEvent};
 use crate::transport::{RtpTransportConfig, UdpRtpTransport, RtpTransport, SecurityRtpTransport};
-use crate::{CsrcManager, CsrcMapping, RtpSsrc, RtpCsrc, MAX_CSRC_COUNT};
-use crate::srtp::{SrtpContext, SrtpCryptoSuite, SRTP_AES128_CM_SHA1_80};
+use crate::{CsrcManager, CsrcMapping, RtpSsrc, RtpCsrc};
+use crate::srtp::{SrtpContext, SRTP_AES128_CM_SHA1_80};
 use crate::srtp::crypto::SrtpCryptoKey;
 
-use super::core::{ClientConnection, handle_client, handle_client_static};
+use super::core::ClientConnection;
 
 /// Default implementation of the MediaTransportServer
 pub struct DefaultMediaTransportServer {

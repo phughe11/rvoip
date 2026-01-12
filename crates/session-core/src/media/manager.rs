@@ -13,7 +13,6 @@
 //! - Instant mute/unmute without renegotiation
 
 use crate::api::types::SessionId;
-use crate::errors::Result;
 use super::types::*;
 use super::MediaError;
 use super::rtp_encoder;
@@ -21,20 +20,18 @@ use std::sync::Arc;
 use std::collections::{HashMap, HashSet};
 use std::net::SocketAddr;
 use tracing::warn;
-use tokio::sync::{RwLock, Mutex, mpsc};
-use async_trait::async_trait;
+use tokio::sync::Mutex;
 
 // Import RTP types from media-core (media-core provides the abstraction)
 // session-core should NOT directly import from rtp-core - use media-core's abstractions
 use rvoip_media_core::performance::pool::PoolStats;
-use rvoip_media_core::{MediaSessionId as MediaCoreSessionId};
 use rvoip_media_core::prelude::RtpPacket;
 use crate::manager::events::SessionEventProcessor;
 
 // Add integration imports for new codec detection and fallback systems
 use rvoip_media_core::relay::controller::{
     codec_detection::{CodecDetector, CodecDetectionResult},
-    codec_fallback::{CodecFallbackManager, FallbackMode, FallbackStats},
+    codec_fallback::{CodecFallbackManager, FallbackMode},
 };
 use rvoip_media_core::codec::mapping::CodecMapper;
 

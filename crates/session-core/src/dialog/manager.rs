@@ -8,7 +8,7 @@ use rvoip_dialog_core::{
     api::unified::UnifiedDialogApi,
     DialogId,
 };
-use crate::api::types::{SessionId, CallSession, CallState, MediaInfo};
+use crate::api::types::{SessionId, CallState};
 use crate::coordinator::registry::InternalSessionRegistry;
 use crate::dialog::{DialogError, DialogResult, SessionDialogHandle};
 
@@ -75,7 +75,7 @@ impl DialogManager {
     ) -> DialogResult<()> {
         // Send NOTIFY through dialog-core
         self.dialog_api
-            .send_notify(dialog_id, event, body)
+            .send_notify(dialog_id, event, body, None)
             .await
             .map_err(|e| DialogError::DialogCore {
                 source: Box::new(e),

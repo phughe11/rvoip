@@ -170,7 +170,7 @@ impl Serialize for OptimizedCallState {
     where
         S: Serializer,
     {
-        use serde::ser::SerializeStructVariant;
+        
         
         match self {
             Self::Initiating => serializer.serialize_unit_variant("OptimizedCallState", 0, "Initiating"),
@@ -193,7 +193,7 @@ impl<'de> Deserialize<'de> for OptimizedCallState {
     where
         D: Deserializer<'de>,
     {
-        use serde::de::{self, Visitor, VariantAccess, EnumAccess};
+        use serde::de::{Visitor, VariantAccess, EnumAccess};
         
         #[derive(Deserialize)]
         #[serde(field_identifier, rename_all = "PascalCase")]

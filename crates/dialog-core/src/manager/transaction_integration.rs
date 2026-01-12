@@ -16,7 +16,7 @@ use std::net::SocketAddr;
 use tracing::{debug, warn, info, error};
 use rvoip_sip_core::{Request, Response, Method};
 use crate::transaction::{TransactionKey, TransactionEvent, TransactionState};
-use crate::transaction::builders::{dialog_utils, dialog_quick};
+use crate::transaction::builders::dialog_quick;
 use crate::transaction::dialog::{request_builder_from_dialog_template, DialogRequestTemplate};
 use crate::errors::DialogResult;
 use crate::dialog::DialogId;

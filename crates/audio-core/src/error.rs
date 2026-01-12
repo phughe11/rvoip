@@ -3,7 +3,6 @@
 //! This module defines comprehensive error handling for all audio operations,
 //! including device management, format conversion, codec processing, and RTP integration.
 
-use std::fmt;
 
 /// Result type for audio operations
 pub type AudioResult<T> = std::result::Result<T, AudioError>;

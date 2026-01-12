@@ -112,7 +112,7 @@
 //! ```
 
 use std::sync::Arc;
-use crate::api::types::{CallSession, SessionId, CallState, IncomingCall, CallDecision};
+use crate::api::types::{CallSession, SessionId, CallState, IncomingCall};
 use crate::coordinator::SessionCoordinator;
 use crate::errors::{Result, SessionError};
 

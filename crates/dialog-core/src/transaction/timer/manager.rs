@@ -78,7 +78,7 @@ use tokio::sync::Mutex;
 use tokio::time::sleep;
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
-use tracing::{debug, error, trace, warn};
+use tracing::{debug, trace};
 
 use crate::transaction::{TransactionKey, InternalTransactionCommand};
 // Ensure TimerSettings is correctly imported if it was moved to super::types

@@ -36,8 +36,7 @@ use anyhow::{Result, anyhow};
 use sqlx::{SqlitePool, Row, Transaction, Sqlite};
 use chrono::{DateTime, Utc};
 use serde::{Serialize, Deserialize};
-use tracing::{info, debug, warn, error};
-use uuid::Uuid;
+use tracing::{info, debug};
 use crate::agent::AgentStatus;
 use crate::prelude::SessionId;
 

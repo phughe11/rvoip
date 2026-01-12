@@ -455,7 +455,7 @@
 //! ```
 
 use std::collections::HashMap;
-use tracing::{info, debug, warn};
+use tracing::{info, debug};
 
 use rvoip_session_core::SessionId;
 

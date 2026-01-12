@@ -4,18 +4,16 @@
 //! handling event bridging and lifecycle management.
 
 use std::sync::Arc;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::mpsc;
 use rvoip_dialog_core::{
     api::unified::UnifiedDialogApi,
     events::SessionCoordinationEvent,
     DialogId,
 };
-use rvoip_sip_core::types::headers::HeaderAccess;
 use crate::api::{
-    types::{SessionId, CallSession, IncomingCall, CallDecision, CallState},
+    types::{SessionId, CallDecision, CallState},
     handlers::CallHandler,
 };
-use crate::session::Session;
 use crate::manager::events::SessionEvent;
 use crate::coordinator::registry::InternalSessionRegistry;
 use crate::coordinator::transfer::TransferHandler;
@@ -89,15 +87,12 @@ impl SessionDialogCoordinator {
     
     /// Initialize session coordination with dialog-core
     pub async fn initialize(&self, session_events_tx: mpsc::Sender<SessionCoordinationEvent>) -> DialogResult<()> {
-        // Set up session coordination with dialog-core
-        tracing::debug!("🔗 SETUP: Setting up session coordination with dialog-core");
-        self.dialog_api
-            .set_session_coordinator(session_events_tx)
-            .await
-            .map_err(|e| DialogError::Coordination {
-                message: format!("Failed to set session coordinator: {}", e),
+        tracing::debug!("🔗 SETUP: Injecting session coordination channel into UnifiedDialogApi");
+        
+        self.dialog_api.set_session_coordinator(session_events_tx).await
+            .map_err(|e| DialogError::Configuration { 
+                message: format!("Failed to set session coordinator: {}", e) 
             })?;
-        tracing::debug!("✅ SETUP: Session coordination setup complete");
         
         Ok(())
     }
@@ -1362,7 +1357,6 @@ impl Clone for SessionDialogCoordinator {
             dialog_api: Arc::clone(&self.dialog_api),
             registry: Arc::clone(&self.registry),
             handler: self.handler.clone(),
-            event_processor: self.event_processor.clone(),
             dialog_to_session: Arc::clone(&self.dialog_to_session),
             session_to_dialog: Arc::clone(&self.session_to_dialog),
             incoming_sdp_offers: Arc::clone(&self.incoming_sdp_offers),
@@ -1370,6 +1364,7 @@ impl Clone for SessionDialogCoordinator {
             fromtag_to_session: Arc::clone(&self.fromtag_to_session),
             fromuri_to_session: Arc::clone(&self.fromuri_to_session),
             transfer_handler,
+            event_processor: Arc::clone(&self.event_processor),
         }
     }
 }

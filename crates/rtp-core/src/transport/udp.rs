@@ -4,14 +4,13 @@
 
 use std::net::SocketAddr;
 use std::sync::Arc;
-use std::any::Any;
 
 use async_trait::async_trait;
 use tokio::net::UdpSocket;
-use tokio::sync::{Mutex, mpsc, broadcast};
+use tokio::sync::{Mutex, broadcast};
 use tokio::task::JoinHandle;
 use bytes::Bytes;
-use tracing::{error, warn, debug, trace, info};
+use tracing::{error, warn, debug, info};
 
 use crate::error::Error;
 use crate::Result;
@@ -20,7 +19,7 @@ use crate::packet::rtcp::RtcpPacket;
 use crate::traits::RtpEvent;
 use crate::DEFAULT_MAX_PACKET_SIZE;
 use super::{RtpTransport, RtpTransportConfig};
-use super::validation::{PlatformSocketStrategy, RtpSocketValidator};
+use super::validation::PlatformSocketStrategy;
 use super::allocator::{GlobalPortAllocator, PairingStrategy};
 
 /// UDP transport for RTP/RTCP

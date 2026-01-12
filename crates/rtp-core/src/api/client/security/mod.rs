@@ -3,10 +3,8 @@
 //! This module provides security-related interfaces for the client-side media transport.
 
 use std::net::SocketAddr;
-use std::sync::Arc;
 use std::any::Any;
 use async_trait::async_trait;
-use tokio::net::UdpSocket;
 
 use crate::api::common::error::SecurityError;
 use crate::api::common::config::{SecurityInfo, SecurityMode, SrtpProfile};

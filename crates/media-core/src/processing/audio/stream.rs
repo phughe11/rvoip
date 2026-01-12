@@ -12,7 +12,6 @@ use crate::types::{AudioFrame, SampleRate};
 use crate::types::conference::{ParticipantId, AudioStream, ConferenceError, ConferenceResult};
 use crate::processing::format::FormatConverter;
 use crate::processing::audio::VoiceActivityDetector;
-use crate::error::Result;
 
 /// Manager for audio streams from conference participants
 pub struct AudioStreamManager {

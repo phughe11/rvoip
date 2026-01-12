@@ -167,28 +167,21 @@ mod tests;
 pub use types::*;
 pub use handlers::*;
 pub use utils::*;
-use functions::*;
 
 use std::collections::HashMap;
 use std::fmt;
-use std::net::{IpAddr, SocketAddr};
+use std::net::SocketAddr;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
-use std::str::FromStr;
-use std::pin::Pin;
-use std::future::Future;
 
 use tokio::sync::{Mutex, mpsc};
-use tokio::time::sleep;
-use tracing::{debug, error, info, warn, trace};
-use async_trait::async_trait;
+use tracing::{debug, error, info, warn};
 
 use rvoip_sip_core::prelude::*;
-use rvoip_sip_core::{Host, TypedHeader};
+use rvoip_sip_core::TypedHeader;
 use rvoip_sip_transport::{Transport, TransportEvent};
 use rvoip_sip_transport::transport::TransportType;
 
-use crate::transaction::error::{self, Error, Result};
+use crate::transaction::error::{Error, Result};
 use crate::transaction::{
     Transaction, TransactionAsync, TransactionState, TransactionKind, TransactionKey, TransactionEvent,
     InternalTransactionCommand,
@@ -203,9 +196,8 @@ use crate::transaction::client::{
 };
 use crate::transaction::runner::HasLifecycle;
 use crate::transaction::server::{ServerTransaction, ServerInviteTransaction, ServerNonInviteTransaction, CommonServerTransaction};
-use crate::transaction::timer::{Timer, TimerManager, TimerFactory, TimerSettings};
-use crate::transaction::method::{cancel, update, ack};
-use crate::transaction::utils::{transaction_key_from_message, generate_branch, create_ack_from_invite};
+use crate::transaction::timer::{TimerManager, TimerFactory, TimerSettings};
+use crate::transaction::method::{cancel, update};
 use crate::transaction::transport::{
     TransportCapabilities, TransportInfo, 
     NetworkInfoForSdp, WebSocketStatus, TransportCapabilitiesExt
@@ -1510,7 +1502,7 @@ impl TransactionManager {
         }
         
         // Send to interested subscribers only
-        let mut subs = subscribers.lock().await;
+        let subs = subscribers.lock().await;
         
         // If we have transaction-specific subscribers, filter events
         if let Some(tx_to_subs_map) = transaction_to_subscribers {

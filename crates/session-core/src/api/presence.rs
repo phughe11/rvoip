@@ -4,14 +4,12 @@
 //! that works transparently in both P2P and B2BUA scenarios.
 
 use std::sync::Arc;
-use std::time::Duration;
 use tokio::sync::mpsc;
-use tracing::{debug, info, warn};
+use tracing::info;
 
 use crate::api::SimplePeer;
 use crate::coordinator::presence::{PresenceStatus, PresenceInfo};
-use crate::errors::{Result, SessionError};
-use crate::manager::events::SessionEvent;
+use crate::errors::Result;
 
 /// Builder for setting presence status
 pub struct PresenceBuilder<'a> {
@@ -253,7 +251,7 @@ impl SimplePeer {
         let (tx, rx) = mpsc::channel(10);
         
         // Create watcher
-        let mut watcher = PresenceWatcher::new(
+        let watcher = PresenceWatcher::new(
             target_uri.clone(),
             rx,
             self.coordinator.clone(),

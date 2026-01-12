@@ -7,7 +7,7 @@
 use crate::{
     error::{SipClientError, SipClientResult},
     events::{SipClientEvent, EventEmitter},
-    recovery::{RecoveryManager, NetworkMetrics},
+    recovery::RecoveryManager,
     types::CallId,
 };
 use std::{
@@ -17,7 +17,7 @@ use std::{
 };
 use tokio::{
     sync::{RwLock, Mutex},
-    time::{sleep, timeout, Instant},
+    time::timeout,
 };
 use tracing::{debug, error, info, warn};
 

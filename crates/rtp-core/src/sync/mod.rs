@@ -9,8 +9,7 @@
 //! - Detecting and compensating for clock drift
 
 use std::collections::HashMap;
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
-use std::sync::{Arc, Mutex};
+use std::time::Instant;
 
 use crate::RtpSsrc;
 use crate::packet::rtcp::NtpTimestamp;

@@ -4,10 +4,9 @@
 //! of different audio processing strategies.
 
 use std::time::{Duration, Instant};
-use std::collections::VecDeque;
 use crate::types::AudioFrame;
 use crate::performance::zero_copy::ZeroCopyAudioFrame;
-use crate::performance::pool::{AudioFramePool, PoolConfig, PooledAudioFrame};
+use crate::performance::pool::{AudioFramePool, PoolConfig};
 
 /// Performance measurement results
 #[derive(Debug, Clone)]

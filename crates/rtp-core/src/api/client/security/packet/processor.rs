@@ -5,14 +5,12 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 
 use crate::api::common::error::SecurityError;
 use crate::dtls::DtlsConnection;
 use crate::srtp::SrtpContext;
 use crate::api::client::security::srtp::keys;
-use crate::dtls::record::{Record, ContentType};
-use crate::dtls::message::handshake::HandshakeHeader;
 
 /// Process a DTLS packet
 pub async fn process_packet(

@@ -2,9 +2,8 @@ use bytes::{Bytes, BytesMut};
 use std::fmt;
 use tracing::debug;
 
-use crate::error::Error;
 use crate::{Result, RtpSequenceNumber, RtpSsrc, RtpTimestamp};
-use super::header::{RtpHeader, hex_dump, RTP_MIN_HEADER_SIZE};
+use super::header::RtpHeader;
 
 /// An RTP packet with header and payload
 #[derive(Clone, PartialEq, Eq)]

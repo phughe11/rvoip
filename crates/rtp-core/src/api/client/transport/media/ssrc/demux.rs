@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::Mutex;
-use tracing::{debug, warn};
+use tracing::debug;
 
 use crate::api::common::error::MediaTransportError;
 use crate::session::RtpSession;

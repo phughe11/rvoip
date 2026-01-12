@@ -4,7 +4,6 @@
 //! tokio::broadcast system with the new infra-common based system during transition.
 
 use std::sync::Arc;
-use tokio::sync::broadcast;
 use async_trait::async_trait;
 use crate::manager::events::{SessionEvent, SessionEventProcessor, SessionEventSubscriber};
 use crate::errors::{Result, SessionError};

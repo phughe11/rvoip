@@ -10,12 +10,11 @@ use async_trait::async_trait;
 use tokio::sync::{mpsc, Mutex, RwLock};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::collections::HashMap;
-use rand::Rng;
 use tracing::debug;
 
 use crate::api::common::frame::MediaFrame;
 use crate::api::common::error::MediaTransportError;
-use crate::api::common::events::{MediaTransportEvent, MediaEventCallback};
+use crate::api::common::events::MediaEventCallback;
 use crate::api::common::config::SecurityInfo;
 use crate::api::common::stats::MediaStats;
 use crate::api::common::stats::{StreamStats, Direction, QualityLevel};
@@ -28,7 +27,7 @@ use crate::api::client::transport::MediaSyncInfo;
 use crate::api::client::security::ClientSecurityContext;
 use crate::api::client::security::DefaultClientSecurityContext;
 use crate::session::{RtpSession, RtpSessionConfig};
-use crate::transport::{UdpRtpTransport, RtpTransport};
+use crate::transport::RtpTransport;
 use crate::api::common::extension::ExtensionFormat;
 use crate::api::server::transport::HeaderExtension;
 use crate::buffer::{
@@ -39,7 +38,7 @@ use crate::{CsrcManager, CsrcMapping, RtpSsrc, RtpCsrc};
 
 // Import module functions
 use crate::api::client::transport::core::{connection, frame, events};
-use crate::api::client::transport::media::{sync, csrc, extensions};
+use crate::api::client::transport::media::{csrc, extensions};
 use crate::api::client::transport::rtcp::{reports, app_packets};
 use crate::api::client::transport::security::client_security;
 use crate::api::client::transport::buffer::{transmit, stats};
@@ -435,7 +434,7 @@ impl MediaTransportClient for DefaultMediaTransportClient {
     }
     
     async fn set_jitter_buffer_size(&self, size_ms: Duration) -> Result<(), MediaTransportError> {
-        let mut session = self.session.lock().await;
+        let session = self.session.lock().await;
         // This method doesn't exist in RtpSession but would in a real implementation
         // Just return Ok for now
         Ok(())

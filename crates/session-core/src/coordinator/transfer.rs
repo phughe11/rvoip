@@ -10,13 +10,12 @@
 
 use std::sync::Arc;
 use std::collections::HashMap;
-use tracing::{info, debug, error, warn};
+use tracing::{info, error};
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use rvoip_dialog_core::{DialogId, TransactionKey};
 use rvoip_sip_core::types::refer_to::ReferTo;
-use rvoip_sip_core::{Request, Response, StatusCode, Method};
 
 use crate::api::types::{SessionId, CallState};
 use crate::coordinator::registry::InternalSessionRegistry;
@@ -238,7 +237,7 @@ impl TransferHandler {
 
     /// Update subscription with transfer session ID
     pub async fn update_subscription(&self, event_id: &str, transfer_session_id: SessionId) {
-        if let Some(mut sub) = self.subscriptions.write().await.get_mut(event_id) {
+        if let Some(sub) = self.subscriptions.write().await.get_mut(event_id) {
             sub.transfer_session_id = Some(transfer_session_id);
         }
     }
@@ -274,7 +273,7 @@ impl TransferHandler {
         
         // Send NOTIFY through dialog API
         self.dialog_api
-            .send_notify(dialog_id, "refer".to_string(), Some(notify_body))
+            .send_notify(dialog_id, "refer".to_string(), Some(notify_body), None)
             .await
             .map_err(|e| SessionError::internal(
                 &format!("Failed to send NOTIFY: {}", e)

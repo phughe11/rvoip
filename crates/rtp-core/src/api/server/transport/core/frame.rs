@@ -3,20 +3,17 @@
 //! This module handles frame sending, receiving, and broadcasting functionality.
 
 use std::collections::HashMap;
-use std::net::SocketAddr;
 use std::sync::Arc;
 use bytes::Bytes;
-use tokio::sync::{Mutex, RwLock, broadcast};
+use tokio::sync::{RwLock, broadcast};
 use tracing::{debug, warn};
 
 use crate::api::common::frame::MediaFrame;
 use crate::api::common::error::MediaTransportError;
-use crate::api::common::frame::MediaFrameType;
 use crate::api::server::transport::core::connection::ClientConnection;
 use crate::packet::RtpPacket;
-use crate::session::RtpSession;
-use crate::{CsrcManager, RtpCsrc, MAX_CSRC_COUNT};
-use crate::transport::{UdpRtpTransport, RtpTransport};
+use crate::{CsrcManager, MAX_CSRC_COUNT};
+use crate::transport::RtpTransport;
 
 /// Send a media frame to a specific client
 pub async fn send_frame_to(
@@ -42,7 +39,7 @@ pub async fn send_frame_to(
     let session = client.session.clone();
     drop(clients_guard);
     
-    let mut session_guard = session.lock().await;
+    let session_guard = session.lock().await;
     
     // Get SSRC to use
     let ssrc = if *ssrc_demultiplexing_enabled.read().await && frame.ssrc != 0 {

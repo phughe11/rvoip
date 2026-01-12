@@ -5,13 +5,12 @@
 //! 1. A mandatory SR or RR packet first
 //! 2. Optional additional packets (SDES, BYE, APP, XR)
 
-use bytes::{Buf, BufMut, Bytes, BytesMut};
-use std::io::Cursor;
+use bytes::{Buf, Bytes, BytesMut};
 
 use crate::error::Error;
 use crate::Result;
 use super::{
-    RtcpPacket, RtcpPacketType, 
+    RtcpPacket, 
     RtcpSenderReport, RtcpReceiverReport,
     RtcpSourceDescription, RtcpGoodbye, 
     RtcpApplicationDefined, RtcpExtendedReport

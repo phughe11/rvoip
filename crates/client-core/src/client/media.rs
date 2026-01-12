@@ -12,14 +12,9 @@ use chrono::{DateTime, Utc};
 use rvoip_session_core::api::{
     SessionControl,
     MediaControl,
-    SessionCoordinator,
-    SessionId,
-    MediaInfo as SessionMediaInfo,
     CallStatistics,
     MediaSessionStats,
     RtpSessionStats,
-    QualityMetrics,
-    QualityThresholds,
 };
 
 // Import client-core types

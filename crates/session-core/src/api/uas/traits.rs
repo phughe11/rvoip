@@ -1,8 +1,7 @@
 //! UAS trait definitions
 
 use async_trait::async_trait;
-use crate::api::types::{SessionId, CallState, IncomingCall, CallSession};
-use crate::errors::Result;
+use crate::api::types::{SessionId, IncomingCall, CallSession};
 use super::UasCallDecision;
 
 /// Handler for incoming calls in UAS

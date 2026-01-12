@@ -1,10 +1,9 @@
 use std::time::Duration;
-use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 use tracing::{debug, trace};
 
-use crate::transaction::timer::{TimerSettings, TimerManager, TimerFactory, Timer, TimerType};
+use crate::transaction::timer::{TimerSettings, TimerManager, TimerType};
 use crate::transaction::{TransactionKey, TransactionState, InternalTransactionCommand};
 
 /// Helper module for transaction-specific timer operations using the core timer infrastructure.

@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{RwLock, Mutex};
 use tokio::time::interval;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, info};
 use bytes::Bytes;
 
 use rvoip_rtp_core::RtpSession;

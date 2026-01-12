@@ -10,17 +10,15 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::collections::HashMap;
 use tokio::sync::{Mutex, mpsc};
 use bytes::Bytes;
-use tracing::{debug, error, info, warn};
-use rand::Rng;
+use tracing::{debug, warn};
 
 use crate::api::common::frame::{MediaFrame, MediaFrameType};
 use crate::api::common::error::MediaTransportError;
-use crate::transport::{RtpTransport, UdpRtpTransport};
-use crate::packet::RtpPacket;
+use crate::transport::RtpTransport;
 use crate::session::RtpSession;
 use crate::CsrcManager;
 use crate::api::client::config::ClientConfig;
-use crate::{CsrcMapping, RtpSsrc, RtpCsrc, MAX_CSRC_COUNT};
+use crate::MAX_CSRC_COUNT;
 
 /// Send a media frame to the remote peer
 ///
@@ -46,7 +44,7 @@ pub async fn send_frame(
     debug!("Send frame called: PT={}, TS={}, size={}, marker={}", 
            frame.payload_type, frame.timestamp, frame.data.len(), frame.marker);
     
-    let mut session_guard = session.lock().await;
+    let session_guard = session.lock().await;
     
     // Select SSRC
     let ssrc = if config.ssrc_demultiplexing_enabled.unwrap_or(false) && frame.ssrc != 0 {
@@ -174,7 +172,7 @@ pub async fn process_packet(
     session: &Arc<Mutex<RtpSession>>,
     frame_sender: &mpsc::Sender<MediaFrame>,
 ) -> Result<(), MediaTransportError> {
-    let mut session = session.lock().await;
+    let session = session.lock().await;
     
     // Handle the processing here manually since we have raw packet data
     match crate::packet::RtpPacket::parse(packet) {

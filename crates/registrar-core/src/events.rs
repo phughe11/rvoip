@@ -188,9 +188,9 @@ mod tests {
             user: "test".to_string(),
             contact: ContactInfo {
                 uri: "sip:test@example.com".to_string(),
-                instance_id: "device1".to_string(),
-                transport: crate::types::Transport::UDP,
-                user_agent: "test".to_string(),
+                instance_id: "".to_string(),
+                transport: crate::types::Transport::Udp,
+                user_agent: "".to_string(),
                 expires: chrono::Utc::now(),
                 q_value: 1.0,
                 received: None,

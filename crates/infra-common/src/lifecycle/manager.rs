@@ -84,7 +84,7 @@ impl LifecycleManager {
     
     /// Initialize all components in dependency order
     pub async fn init_all(&self) -> Result<()> {
-        let mut components = self.components.write().unwrap();
+        let components = self.components.write().unwrap();
         let order = self.get_init_order()?;
         
         for name in order {
@@ -104,7 +104,7 @@ impl LifecycleManager {
     
     /// Start all components in dependency order
     pub async fn start_all(&self) -> Result<()> {
-        let mut components = self.components.write().unwrap();
+        let components = self.components.write().unwrap();
         let order = self.get_init_order()?;
         
         for name in order {
@@ -124,7 +124,7 @@ impl LifecycleManager {
     
     /// Stop all components in reverse dependency order
     pub async fn stop_all(&self) -> Result<()> {
-        let mut components = self.components.write().unwrap();
+        let components = self.components.write().unwrap();
         let mut order = self.get_init_order()?;
         order.reverse(); // Reverse order for shutdown
         
@@ -145,7 +145,7 @@ impl LifecycleManager {
     
     /// Shut down all components in reverse dependency order
     pub async fn shutdown_all(&self) -> Result<()> {
-        let mut components = self.components.write().unwrap();
+        let components = self.components.write().unwrap();
         let mut order = self.get_init_order()?;
         order.reverse(); // Reverse order for shutdown
         

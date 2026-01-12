@@ -8,11 +8,11 @@ use std::sync::Arc;
 use std::collections::HashMap;
 use tokio::sync::RwLock;
 
-use crate::api::common::config::{KeyExchangeMethod, SecurityConfig, SecurityMode, SrtpProfile};
+use crate::api::common::config::{KeyExchangeMethod, SecurityConfig};
 use crate::api::common::error::SecurityError;
-use crate::api::common::unified_security::{UnifiedSecurityContext, SecurityState, SecurityContextFactory};
-use crate::api::client::security::{ClientSecurityContext, DefaultClientSecurityContext};
-use crate::api::server::security::{ServerSecurityContext, DefaultServerSecurityContext};
+use crate::api::common::unified_security::{UnifiedSecurityContext, SecurityContextFactory};
+use crate::api::client::security::ClientSecurityContext;
+use crate::api::server::security::ServerSecurityContext;
 
 /// High-level security context manager that can coordinate multiple security methods
 pub struct SecurityContextManager {

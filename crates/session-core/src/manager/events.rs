@@ -6,7 +6,7 @@
 use std::sync::Arc;
 use tokio::sync::{broadcast, RwLock};
 use serde::{Serialize, Deserialize};
-use crate::api::types::{SessionId, CallSession, CallState, AudioFrame, AudioStreamConfig};
+use crate::api::types::{SessionId, CallState, AudioFrame, AudioStreamConfig};
 use crate::media::types::{RtpProcessingType, RtpProcessingMode, RtpProcessingMetrics, RtpBufferPoolStats};
 use crate::errors::Result;
 use chrono;
