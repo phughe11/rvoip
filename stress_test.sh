@@ -8,7 +8,7 @@ set -e
 BASE_DIR="/Users/user/rvoip_v1.26/rvoip"
 BIN_SERVER="$BASE_DIR/target/release/rvoip"
 BIN_AGENT="$BASE_DIR/target/release/examples/e2e_test_agent"
-BIN_UAC="$BASE_DIR/target/release/examples/uac_client"
+BIN_UAC="$BASE_DIR/crates/client-core/examples/client-server/target/release/uac_client"
 LOG_DIR="$BASE_DIR/stress_logs"
 
 SERVER_PORT=5060

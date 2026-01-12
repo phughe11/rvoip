@@ -61,8 +61,18 @@ impl StandardTokenService {
     
     // Background task to clean up expired cache entries
     pub async fn start_cleanup_task(&self) {
-        // Implementation for periodic cleanup
-        // For now, simple check on access is used, but proactive cleanup prevents memory leaks
+        let cache = self.token_cache.clone();
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(Duration::from_secs(60));
+            loop {
+                interval.tick().await;
+                let now = Instant::now();
+                // Remove expired entries
+                // DashMap::retain safely locks shards during iteration
+                cache.retain(|_, v| v.expires_at > now);
+                tracing::debug!("Token cache cleanup completed");
+            }
+        });
     }
 }
 

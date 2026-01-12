@@ -74,19 +74,55 @@ pub struct ConferenceRoom {
 impl ConferenceRoom {
     pub async fn new(id: ConferenceId, rtp_bridge: Arc<RtpBridge>) -> ConferenceResult<Self> {
         let config = ConferenceMixingConfig::default();
-        let mixer = AudioMixer::new(config).await?;
+        let mixer = Arc::new(AudioMixer::new(config).await?);
         
         let room = Self {
             id: id.clone(),
-            mixer: Arc::new(mixer),
-            rtp_bridge,
+            mixer: mixer.clone(),
+            rtp_bridge: rtp_bridge.clone(),
             participants: RwLock::new(Vec::new()),
             mixing_task: Mutex::new(None),
             codec: Mutex::new(G711Codec::mu_law(8000, 1).expect("Failed to create G711 codec")),
         };
         
         // Start mixing loop
-        // In real implementation, we'd start this separately or on first join
+        let mixer_clone = mixer.clone();
+        let bridge_clone = rtp_bridge.clone();
+        let room_id = id.clone();
+
+        let task = tokio::spawn(async move {
+            let mut interval = tokio::time::interval(std::time::Duration::from_millis(20));
+            let mut codec = G711Codec::mu_law(8000, 1).expect("Failed to create codec for mixer");
+
+            loop {
+                interval.tick().await;
+                
+                // 1. Perform mixing
+                // Pass empty slice as inputs are managed internally by AudioStreamManager
+                match mixer_clone.mix_participants(&[]).await {
+                    Ok(mixed_frames) => {
+                        for (pid, frame) in mixed_frames {
+                            // 2. Encode
+                            if let Ok(encoded) = codec.encode(&frame) {
+                                // 3. Send back to participant via RTP bridge
+                                // Convert ParticipantId to MediaSessionId
+                                let session_id = MediaSessionId::new(pid.to_string());
+                                let _ = bridge_clone.send_media_packet(
+                                    &session_id, 
+                                    encoded,
+                                    frame.timestamp
+                                ).await;
+                            }
+                        }
+                    },
+                    Err(e) => {
+                        error!("Mixing error in room {}: {:?}", room_id, e);
+                    }
+                }
+            }
+        });
+        
+        *room.mixing_task.lock().await = Some(task);
         
         Ok(room)
     }
