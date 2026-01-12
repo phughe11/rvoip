@@ -68,7 +68,8 @@ pub struct ConferenceRoom {
     rtp_bridge: Arc<RtpBridge>,
     participants: RwLock<Vec<String>>, // session_ids
     mixing_task: Mutex<Option<JoinHandle<()>>>,
-    codec: Mutex<G711Codec>, // For MVP, assume G.711
+    // Use Box<dyn AudioCodec> to support multiple codecs in future
+    codec: Mutex<Box<dyn AudioCodec + Send + Sync>>, 
 }
 
 impl ConferenceRoom {
@@ -76,13 +77,15 @@ impl ConferenceRoom {
         let config = ConferenceMixingConfig::default();
         let mixer = Arc::new(AudioMixer::new(config).await?);
         
+        let codec = Box::new(G711Codec::mu_law(8000, 1).expect("Failed to create G711 codec"));
+
         let room = Self {
             id: id.clone(),
             mixer: mixer.clone(),
             rtp_bridge: rtp_bridge.clone(),
             participants: RwLock::new(Vec::new()),
             mixing_task: Mutex::new(None),
-            codec: Mutex::new(G711Codec::mu_law(8000, 1).expect("Failed to create G711 codec")),
+            codec: Mutex::new(codec),
         };
         
         // Start mixing loop
@@ -93,7 +96,9 @@ impl ConferenceRoom {
         let task = tokio::spawn(async move {
             let mut interval = tokio::time::interval(std::time::Duration::from_millis(20));
             interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
-            let mut codec = G711Codec::mu_law(8000, 1).expect("Failed to create codec for mixer");
+            
+            // Thread-local codec for mixing output (avoids lock contention)
+            let mut output_codec = G711Codec::mu_law(8000, 1).expect("Failed to create codec for mixer");
 
             loop {
                 interval.tick().await;
@@ -105,7 +110,8 @@ impl ConferenceRoom {
                     Ok(mixed_frames) => {
                         for (pid, frame) in mixed_frames {
                             // 2. Encode
-                            if let Ok(encoded) = codec.encode(&frame) {
+                            // We use the local codec for output encoding
+                            if let Ok(encoded) = output_codec.encode(&frame) {
                                 // 3. Send back to participant via RTP bridge
                                 // Convert ParticipantId to MediaSessionId
                                 let session_id = MediaSessionId::new(pid.to_string());
@@ -153,10 +159,8 @@ impl ConferenceRoom {
     pub async fn process_input(&self, session_id: &str, payload: &[u8]) {
         // 1. Decode
         let mut codec = self.codec.lock().await;
-        // G711Codec `decode` expects payload and returns AudioFrame
+        // 2. Feed to Mixer
         if let Ok(frame) = codec.decode(payload) {
-             // 2. Feed to Mixer
-             // AudioMixer::process_audio_frame expects &ParticipantId
              let pid = ParticipantId::new(session_id);
              let _ = self.mixer.process_audio_frame(&pid, frame).await;
         }

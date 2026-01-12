@@ -19,6 +19,7 @@ use rvoip_sip_core::{Request, HeaderName};
 use std::net::IpAddr;
 
 mod rate_limit;
+// pub mod nat;
 use rate_limit::RateLimiter;
 
 #[cfg(feature = "b2bua")]

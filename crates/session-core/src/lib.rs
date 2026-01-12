@@ -1,4 +1,8 @@
-//! RVOIP Session Core Library
+#![deprecated(since = "0.1.26", note = "Please use rvoip-session-core-v3 for new development.")]
+//! RVOIP Session Core Library (LEGACY)
+//!
+//! **WARNING: This crate is deprecated and maintained only for backward compatibility.**
+//! **Please use `rvoip-session-core-v3` for all new projects.**
 //!
 //! This library provides Session Initiation Protocol (SIP) session and dialog management 
 //! for the RVOIP stack. It serves as the middle layer between low-level SIP transaction 
