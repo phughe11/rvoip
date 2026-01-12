@@ -526,7 +526,8 @@ impl AdminApi {
             db.upsert_agent(
                 &agent.id,
                 username,  // Use the SIP username, not display_name
-                Some(&agent.sip_uri)
+                Some(&agent.sip_uri),
+                Some(&agent.skills)
             ).await.map_err(|e| CallCenterError::database(&format!("Failed to upsert agent: {}", e)))?;
             
             // Update status separately

@@ -54,9 +54,17 @@ impl DatabaseManager {
     /// Create a new database manager with automatic migrations
     pub async fn new(database_url: &str) -> Result<Self> {
         info!("🗄️ Initializing sqlx database manager: {}", database_url);
+        use std::str::FromStr;
         
+        // Configure connection options for production performance
+        let options = sqlx::sqlite::SqliteConnectOptions::from_str(database_url)?
+            .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal)
+            .synchronous(sqlx::sqlite::SqliteSynchronous::Normal)
+            .busy_timeout(std::time::Duration::from_secs(5))
+            .create_if_missing(true);
+
         // Connect to database
-        let pool = SqlitePool::connect(database_url).await
+        let pool = SqlitePool::connect_with(options).await
             .map_err(|e| anyhow!("Failed to connect to database: {}", e))?;
         
         // Run migrations
@@ -65,7 +73,7 @@ impl DatabaseManager {
             .await
             .map_err(|e| anyhow!("Failed to run migrations: {}", e))?;
         
-        info!("✅ Database manager initialized successfully");
+        info!("✅ Database manager initialized successfully (WAL mode enabled)");
         Ok(Self { pool })
     }
     
@@ -130,6 +138,8 @@ pub struct DbAgent {
     pub current_calls: i32,
     pub max_calls: i32,
     pub available_since: Option<DateTime<Utc>>,
+    pub skills: Option<String>, // JSON array of skills
+    pub last_active: Option<DateTime<Utc>>,
 }
 
 impl DbAgent {
@@ -153,6 +163,8 @@ impl DbAgent {
             current_calls: row.try_get("current_calls")?,
             max_calls: row.try_get("max_calls")?,
             available_since: row.try_get("available_since")?,
+            skills: row.try_get("skills")?,
+            last_active: row.try_get("last_active")?,
         })
     }
 }
@@ -256,9 +268,26 @@ pub struct DbCallRecord {
     pub queue_name: Option<String>,
     pub start_time: Option<DateTime<Utc>>,
     pub end_time: Option<DateTime<Utc>>,
-    pub duration_seconds: Option<i32>,
     pub disposition: Option<String>,
     pub notes: Option<String>,
+}
+
+/// Call history record for metrics
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct DbCallHistory {
+    pub id: i64,
+    pub call_id: String,
+    pub session_id: String,
+    pub agent_id: Option<String>,
+    pub queue_id: Option<String>,
+    pub caller_id: Option<String>,
+    pub start_time: DateTime<Utc>,
+    pub answer_time: Option<DateTime<Utc>>,
+    pub end_time: Option<DateTime<Utc>>,
+    pub wait_time_seconds: Option<i32>,
+    pub talk_time_seconds: Option<i32>,
+    pub disposition: Option<String>,
+    pub created_at: Option<DateTime<Utc>>,
 }
 
 /// Registration record from database
@@ -331,25 +360,35 @@ impl From<sqlx::Error> for DatabaseError {
 // Agent operations implementation
 impl DatabaseManager {
     /// Register or update an agent
-    pub async fn upsert_agent(&self, agent_id: &str, username: &str, contact_uri: Option<&str>) -> Result<()> {
+    pub async fn upsert_agent(
+        &self, 
+        agent_id: &str, 
+        username: &str, 
+        contact_uri: Option<&str>,
+        skills: Option<&[String]>
+    ) -> Result<()> {
         let now = Utc::now();
+        let skills_json = skills.map(|s| serde_json::to_string(s).unwrap_or_default());
+
         info!("🔍 upsert_agent: {} -> {}", agent_id, username);
         
         sqlx::query(
-            "INSERT INTO agents (agent_id, username, contact_uri, last_heartbeat, status, current_calls, max_calls, available_since)
-             VALUES (?, ?, ?, ?, 'AVAILABLE', 0, 1, ?)
+            "INSERT INTO agents (agent_id, username, contact_uri, last_heartbeat, status, current_calls, max_calls, available_since, skills)
+             VALUES (?, ?, ?, ?, 'AVAILABLE', 0, 1, ?, ?)
              ON CONFLICT(agent_id) DO UPDATE SET
                 username = excluded.username,
                 contact_uri = excluded.contact_uri,
                 last_heartbeat = excluded.last_heartbeat,
                 status = 'AVAILABLE',
-                available_since = excluded.available_since"
+                available_since = excluded.available_since,
+                skills = COALESCE(excluded.skills, agents.skills)"
         )
         .bind(agent_id)
         .bind(username)
         .bind(contact_uri.unwrap_or(""))
         .bind(now)
         .bind(now)
+        .bind(skills_json)
         .execute(&self.pool)
         .await?;
         
@@ -795,6 +834,93 @@ impl DatabaseManager {
         Ok(regs)
     }
     
+    /// Record a call start in history
+    pub async fn record_call_start(
+        &self,
+        call_id: &str,
+        session_id: &str,
+        queue_id: &str,
+        caller_id: &str
+    ) -> Result<i64> {
+        let now = Utc::now();
+        let res = sqlx::query(
+            "INSERT INTO call_history (call_id, session_id, queue_id, caller_id, start_time, disposition)
+             VALUES (?, ?, ?, ?, ?, 'abandoned')"
+        )
+        .bind(call_id)
+        .bind(session_id)
+        .bind(queue_id)
+        .bind(caller_id)
+        .bind(now)
+        .execute(&self.pool)
+        .await?;
+        
+        Ok(res.last_insert_rowid())
+    }
+
+    /// Record call answer
+    pub async fn record_call_answer(&self, call_id: &str, agent_id: &str) -> Result<()> {
+        let now = Utc::now();
+        // Calculate wait time in Rust for better precision
+        let row = sqlx::query("SELECT start_time FROM call_history WHERE call_id = ? AND answer_time IS NULL")
+            .bind(call_id)
+            .fetch_optional(&self.pool)
+            .await?;
+        
+        if let Some(r) = row {
+            let start_time: DateTime<Utc> = r.try_get("start_time")?;
+            let wait_time = (now - start_time).num_seconds() as i32;
+            
+            sqlx::query(
+                "UPDATE call_history SET 
+                    agent_id = ?, 
+                    answer_time = ?, 
+                    disposition = 'answered',
+                    wait_time_seconds = ?
+                 WHERE call_id = ? AND answer_time IS NULL"
+            )
+            .bind(agent_id)
+            .bind(now)
+            .bind(wait_time)
+            .bind(call_id)
+            .execute(&self.pool)
+            .await?;
+        }
+        
+        Ok(())
+    }
+
+    /// Record call end
+    pub async fn record_call_end(&self, call_id: &str, disposition: Option<&str>) -> Result<()> {
+        let now = Utc::now();
+        let row = sqlx::query("SELECT answer_time, disposition FROM call_history WHERE call_id = ? AND end_time IS NULL")
+            .bind(call_id)
+            .fetch_optional(&self.pool)
+            .await?;
+            
+        if let Some(r) = row {
+            let answer_time: Option<DateTime<Utc>> = r.try_get("answer_time")?;
+            let talk_time = answer_time.map(|t| (now - t).num_seconds() as i32).unwrap_or(0);
+            let final_disposition = disposition.unwrap_or_else(|| r.try_get("disposition").unwrap_or("error"));
+
+            sqlx::query(
+                "UPDATE call_history SET 
+                    end_time = ?,
+                    talk_time_seconds = ?,
+                    disposition = ?
+                 WHERE call_id = ? AND end_time IS NULL"
+            )
+            .bind(now)
+            .bind(talk_time)
+            .bind(final_disposition)
+            .bind(call_id)
+            .execute(&self.pool)
+            .await?;
+        }
+        
+        Ok(())
+    }
+
     /// Find AOR by contact URI
     pub async fn find_aor_by_contact(&self, contact_uri: &str) -> Result<Option<String>> {
         let row = sqlx::query(
@@ -838,7 +964,7 @@ mod tests {
         let db = DatabaseManager::new_in_memory().await.unwrap();
         
         // Create an agent
-        db.upsert_agent("agent-001", "test_user", Some("sip:test@example.com")).await.unwrap();
+        db.upsert_agent("agent-001", "test_user", Some("sip:test@example.com"), None).await.unwrap();
         
         // Check available agents
         let agents = db.get_available_agents().await.unwrap();

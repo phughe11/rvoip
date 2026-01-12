@@ -899,7 +899,7 @@ impl CallCenterEngine {
                 Err(_) => clean_aor.to_string(),
             };
             
-            if let Err(e) = db_manager.upsert_agent(&aor, &username, Some(&contact_uri)).await {
+            if let Err(e) = db_manager.upsert_agent(&aor, &username, Some(&contact_uri), None).await {
                 tracing::error!("Failed to sync registration to database for {}: {}", aor, e);
             } else {
                 tracing::info!("✅ Registration synced to database for {}", aor);
@@ -958,7 +958,7 @@ impl CallCenterEngine {
                 };
                 
                 // Update or insert agent in database
-                match db_manager.upsert_agent(&username, &username, Some(&contact_uri)).await {
+                match db_manager.upsert_agent(&username, &username, Some(&contact_uri), None).await {
                     Ok(_) => {
                         tracing::info!("✅ Agent {} registered in database with contact {}", username, contact_uri);
                     }

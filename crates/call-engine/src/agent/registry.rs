@@ -465,7 +465,7 @@ impl AgentRegistry {
                 .unwrap_or(&agent.id)
                 .to_string();
 
-            db.upsert_agent(&agent_id, &username, Some(&agent.sip_uri)).await
+            db.upsert_agent(&agent_id, &username, Some(&agent.sip_uri), Some(&agent.skills)).await
                 .map_err(|e| CallCenterError::database(&format!("Failed to upsert agent: {}", e)))?;
             
             db.update_agent_status(&agent_id, agent.status.clone()).await
