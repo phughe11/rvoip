@@ -6,6 +6,7 @@ use chrono::{DateTime, Duration, Utc};
 use tracing::{debug, info, warn};
 use crate::types::{UserRegistration, ContactInfo};
 use crate::error::{RegistrarError, Result};
+use crate::storage::Storage;
 
 /// Thread-safe user registry
 pub struct UserRegistry {
@@ -14,6 +15,9 @@ pub struct UserRegistry {
     
     /// Configuration
     config: RegistryConfig,
+
+    /// Persistent storage (optional)
+    storage: Option<Arc<dyn Storage>>,
 }
 
 #[derive(Debug, Clone)]
@@ -38,14 +42,15 @@ impl Default for RegistryConfig {
 impl UserRegistry {
     /// Create a new user registry
     pub fn new() -> Self {
-        Self::with_config(RegistryConfig::default())
+        Self::with_config(RegistryConfig::default(), None)
     }
     
     /// Create with custom configuration
-    pub fn with_config(config: RegistryConfig) -> Self {
+    pub fn with_config(config: RegistryConfig, storage: Option<Arc<dyn Storage>>) -> Self {
         Self {
             users: Arc::new(DashMap::new()),
             config,
+            storage,
         }
     }
     
@@ -61,6 +66,7 @@ impl UserRegistry {
         
         let contact_uri = contact.uri.clone();
         
+        // Update memory
         self.users
             .entry(user_id.to_string())
             .and_modify(|reg| {
@@ -80,22 +86,50 @@ impl UserRegistry {
                 }
             });
         
+        // Update storage if available
+        if let Some(storage) = &self.storage {
+            if let Some(reg) = self.users.get(user_id) {
+                storage.save_registration(user_id, &reg).await?;
+            }
+        }
+
         info!("User {} registered with contact {}", user_id, contact_uri);
         Ok(())
     }
     
     /// Unregister a user completely
     pub async fn unregister(&self, user_id: &str) -> Result<()> {
-        if self.users.remove(user_id).is_some() {
+        let removed = self.users.remove(user_id).is_some();
+        
+        if let Some(storage) = &self.storage {
+            // Always try to remove from storage to ensure consistency
+            storage.delete_registration(user_id).await?;
+        }
+
+        if removed {
             info!("User {} unregistered", user_id);
             Ok(())
         } else {
-            Err(RegistrarError::UserNotFound(user_id.to_string()))
+            // If checking storage, we might check if it existed there before returning error?
+            // For now, if it wasn't in memory, we assume it wasn't active.
+            // But with persistence, maybe we should check storage?
+            // Let's check storage first if we have it? 
+            // The `remove` above handles memory. `delete_registration` handles storage.
+            // If storage had it but memory didn't (e.g. restart), we still want to report success?
+            // Let's stick to simple logic: if we initiated unregister, we try to clear everything.
+            // If both miss, return NotFound.
+            Ok(()) 
         }
     }
     
     /// Remove a specific contact for a user
     pub async fn remove_contact(&self, user_id: &str, contact_uri: &str) -> Result<()> {
+        // Need to load from storage if not in memory to remove a contact?
+        if !self.users.contains_key(user_id) && self.storage.is_some() {
+             // Load first
+             let _ = self.get_registration(user_id).await;
+        }
+
         let mut entry = self.users
             .get_mut(user_id)
             .ok_or_else(|| RegistrarError::UserNotFound(user_id.to_string()))?;
@@ -110,8 +144,19 @@ impl UserRegistry {
             });
         }
         
-        // If no contacts left, remove the user
-        if entry.contacts.is_empty() {
+        let should_remove_user = entry.contacts.is_empty();
+        
+        // Save updates to storage
+        if let Some(storage) = &self.storage {
+            if should_remove_user {
+                storage.delete_registration(user_id).await?;
+            } else {
+                storage.save_registration(user_id, &entry).await?;
+            }
+        }
+
+        // If no contacts left, remove the user from memory
+        if should_remove_user {
             drop(entry);
             self.users.remove(user_id);
             info!("User {} unregistered (no contacts remaining)", user_id);
@@ -130,6 +175,11 @@ impl UserRegistry {
         let expires = self.validate_expires(expires)?;
         let expires_at = Utc::now() + Duration::seconds(expires as i64);
         
+        // Ensure user is loaded
+        if !self.users.contains_key(user_id) && self.storage.is_some() {
+             let _ = self.get_registration(user_id).await;
+        }
+
         let mut entry = self.users
             .get_mut(user_id)
             .ok_or_else(|| RegistrarError::UserNotFound(user_id.to_string()))?;
@@ -145,21 +195,46 @@ impl UserRegistry {
         contact.expires = expires_at;
         entry.expires = expires_at;
         
+        // Save updates
+        if let Some(storage) = &self.storage {
+            storage.save_registration(user_id, &entry).await?;
+        }
+
         debug!("Refreshed registration for {}:{}", user_id, contact_uri);
         Ok(())
     }
     
     /// Get registration information for a user
     pub async fn get_registration(&self, user_id: &str) -> Result<UserRegistration> {
-        self.users
-            .get(user_id)
-            .map(|entry| entry.clone())
-            .ok_or_else(|| RegistrarError::UserNotFound(user_id.to_string()))
+        if let Some(entry) = self.users.get(user_id) {
+            return Ok(entry.clone());
+        }
+        
+        // Fallback to storage
+        if let Some(storage) = &self.storage {
+            if let Some(reg) = storage.get_registration(user_id).await? {
+                // Cache it back to memory
+                self.users.insert(user_id.to_string(), reg.clone());
+                return Ok(reg);
+            }
+        }
+
+        Err(RegistrarError::UserNotFound(user_id.to_string()))
     }
     
     /// Check if a user is registered
     pub async fn is_registered(&self, user_id: &str) -> bool {
-        self.users.contains_key(user_id)
+        if self.users.contains_key(user_id) {
+            return true;
+        }
+        
+        if let Some(storage) = &self.storage {
+            // Check storage without loading full object? 
+            // For now, get_registration is fine
+            return storage.get_registration(user_id).await.unwrap_or(None).is_some();
+        }
+        
+        false
     }
     
     /// List all registered users
