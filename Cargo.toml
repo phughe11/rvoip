@@ -19,6 +19,10 @@ members = [
     "crates/rvoip",
     "crates/infra-common",
     "crates/registrar-core", "crates/users-core",
+    "crates/b2bua-core",
+    "crates/proxy-core",
+    "crates/media-server-core",
+    "crates/sbc-core",
 ]
 
 # Default members - when you run cargo commands without -p or --workspace,
@@ -139,6 +143,14 @@ rvoip-audio-core = { path = "crates/audio-core", version = "0.1.26" }
 rvoip-sip-client = { path = "crates/sip-client", version = "0.1.26", features = ["simple-api"] }
 rvoip = { path = "crates/rvoip", version = "0.1.26" }
 rvoip-infra-common = { path = "crates/infra-common", version = "0.1.26" }
+rvoip-b2bua-core = { path = "crates/b2bua-core", version = "0.1.26" }
+rvoip-sbc-core = { path = "crates/sbc-core", version = "0.1.26" }
+rvoip-proxy-core = { path = "crates/proxy-core", version = "0.1.26" }
+rvoip-media-server-core = { path = "crates/media-server-core", version = "0.1.26" }
+rvoip-registrar-core = { path = "crates/registrar-core", version = "0.1.26" }
+rvoip-users-core = { path = "crates/users-core", version = "0.1.26" }
+rvoip-session-core-v2 = { path = "crates/session-core-v2", version = "0.1.26" }
+rvoip-session-core-v3 = { path = "crates/session-core-v3", version = "0.1.26" }
 
 # External dependencies
 tokio = { version = "1.36", features = ["full"] }

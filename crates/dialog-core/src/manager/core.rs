@@ -618,6 +618,20 @@ impl DialogManager {
         self.config.as_ref()
     }
     
+    /// Set session coordinator for receiving orchestration events
+    pub async fn set_session_coordinator(&self, sender: mpsc::Sender<SessionCoordinationEvent>) {
+        debug!("Setting session coordinator channel");
+        let mut session_coordinator = self.session_coordinator.write().await;
+        *session_coordinator = Some(sender);
+    }
+    
+    /// Set dialog event sender for external notifications
+    pub async fn set_dialog_event_sender(&self, sender: mpsc::Sender<DialogEvent>) {
+        debug!("Setting dialog event sender channel");
+        let mut dialog_event_sender = self.dialog_event_sender.write().await;
+        *dialog_event_sender = Some(sender);
+    }
+    
     /// Check if auto-response to OPTIONS requests is enabled
     /// 
     /// Returns true if the unified configuration enables automatic OPTIONS responses.

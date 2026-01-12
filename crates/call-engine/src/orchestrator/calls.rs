@@ -579,7 +579,23 @@ impl CallCenterEngine {
         let total_agents = if let Some(db_manager) = &self.db_manager {
             db_manager.count_total_agents().await.unwrap_or_default()
         } else {
-            0
+            // Fallback: check memory registrar
+            let count = self.sip_registrar.lock().await.list_registrations().len() as i64;
+            if count > 0 {
+                info!("ℹ️ Database manager unavailable, using memory registrar count: {}", count);
+            }
+            count
+        };
+        
+        // Final fallback if database returned 0 but memory has agents
+        let total_agents = if total_agents == 0 {
+            let count = self.sip_registrar.lock().await.list_registrations().len() as i64;
+            if count > 0 {
+                info!("ℹ️ Database reported 0 agents, but memory registrar has: {}", count);
+            }
+            count
+        } else {
+            total_agents
         };
         
         if total_agents == 0 {

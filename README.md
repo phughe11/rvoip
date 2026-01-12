@@ -439,15 +439,18 @@ rvoip is organized into 9 core crates, each with specific responsibilities in th
 
 ### 🎛️ Advanced Features
 
-| Feature | Status | Description |
-|---------|--------|-------------|
-| **Call Center Operations** | ✅ Complete | Agent management, queuing, routing |
-| **B2BUA Operations** | ✅ Complete | Back-to-back user agent |
-| **Media Quality Monitoring** | ✅ Complete | Real-time MOS scoring |
-| **Conference Mixing** | ✅ Complete | Multi-party audio mixing |
-| **Call Transfer** | ✅ Complete | Blind transfer support |
-| **Call Hold/Resume** | ✅ Complete | Media session control |
-| **DTMF Support** | ✅ Complete | RFC 2833 DTMF relay |
+|| Feature | Status | Description |
+||---------|--------|-------------|
+|| **Call Center Operations** | 🚧 70% | Agent management, queuing, routing (PoC) |
+|| **B2BUA Operations** | 🚧 60% | Basic bridging, SBC integration, hangup propagation |
+|| **Media Server** | 🚧 50% | Conference mixing, DTMF, WAV playback |
+|| **SBC / Topology Hiding** | 🚧 40% | Header sanitization, rate limiting |
+|| **Media Quality Monitoring** | ✅ Complete | Real-time MOS scoring |
+|| **Conference Mixing** | ✅ Complete | Multi-party audio mixing |
+|| **Call Transfer (Blind)** | ✅ Complete | Blind transfer support |
+|| **Call Transfer (Attended)** | 🚧 Planned | In development |
+|| **Call Hold/Resume** | ✅ Complete | Media session control |
+|| **DTMF Support** | ✅ Complete | RFC 2833 DTMF relay |
 
 
 
@@ -468,21 +471,25 @@ rvoip is organized into 9 core crates, each with specific responsibilities in th
 
 ## 📋 Development Status
 
-### ✅ Production-Ready Components
+### ✅ Production-Ready Components (Core Protocol Stack)
 - **sip-core**: Complete RFC 3261 implementation
-- **session-core**: Full session management
 - **dialog-core**: Complete dialog state machine
-- **transaction-core**: Full transaction layer
 - **media-core**: Advanced audio processing
 - **rtp-core**: Complete RTP/RTCP/SRTP
-- **client-core**: Production-ready client framework
-- **call-engine**: Working call center with database
 - **sip-transport**: UDP/TCP complete, TLS/WS functional
+- **codec-core**: G.711, Opus, G.722, G.729
 
-### 🚧 In Progress
+### 🟡 Alpha Components (Session & Application Layer)
+- **session-core-v3**: Recommended for new projects (75% complete)
+- **client-core**: High-level SIP client API (75% complete)
+- **call-engine**: Call center PoC with database (70% complete)
+
+### 🚧 In Progress (Enterprise Features)
+- **b2bua-core**: Basic bridging works, needs transfers (~60%)
+- **media-server-core**: Conference, DTMF, playback (~50%)
+- **proxy-core**: Basic forwarding, needs load balancing (~40%)
+- **sbc-core**: Topology hiding, integrated with B2BUA (~40%)
 - **NAT Traversal**: Full ICE/STUN/TURN implementation
-- **Video Support**: Video codecs and processing
-- **Advanced Features**: Call transfer, conference (3+ party)
 
 ### 🔮 Roadmap
 - **WebRTC Gateway**: Full WebRTC interoperability

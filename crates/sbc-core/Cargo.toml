@@ -1,0 +1,23 @@
+[package]
+name = "rvoip-sbc-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+rvoip-sip-core.workspace = true
+rvoip-rtp-core.workspace = true
+# Optional B2BUA integration - SBC can wrap B2BUA for B2BUA-mode operation
+rvoip-b2bua-core = { workspace = true, optional = true }
+tracing.workspace = true
+async-trait.workspace = true
+tokio.workspace = true
+anyhow.workspace = true
+dashmap.workspace = true
+
+[features]
+default = []
+# Enable B2BUA mode support - allows SBC to use B2BUA for call handling
+b2bua = ["rvoip-b2bua-core"]

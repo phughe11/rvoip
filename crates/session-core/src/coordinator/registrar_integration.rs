@@ -351,7 +351,7 @@ impl RegistrarIntegration {
                 id: None,
                 params: Default::default(),
             }))
-            .header(TypedHeader::SubscriptionState(SubscriptionState::active(3600).to_string()))
+            .header(TypedHeader::SubscriptionState(SubscriptionState::active(3600)))
             .content_type("application/pidf+xml")
             .body(pidf_body)
             .build();
@@ -439,7 +439,7 @@ impl RegistrarIntegration {
                     id: None,
                     params: Default::default(),
                 }))
-                .header(TypedHeader::SubscriptionState(SubscriptionState::terminated(TerminationReason::Timeout).to_string()))
+                .header(TypedHeader::SubscriptionState(SubscriptionState::terminated(TerminationReason::Timeout)))
                 .body(Vec::<u8>::new())
                 .build();
             

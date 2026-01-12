@@ -907,6 +907,20 @@ impl CallCenterEngine {
         
         tracing::info!("REGISTER processed: {:?} for {}", response.status, aor);
         
+        // Sync registration to database if available
+        if let Some(db_manager) = &self.db_manager {
+            let username = aor.strip_prefix("sip:")
+                .and_then(|s| s.split('@').next())
+                .unwrap_or(&aor)
+                .to_string();
+            
+            if let Err(e) = db_manager.upsert_agent(&aor, &username, Some(&contact_uri)).await {
+                tracing::error!("Failed to sync registration to database for {}: {}", aor, e);
+            } else {
+                tracing::info!("✅ Registration synced to database for {}", aor);
+            }
+        }
+        
         // Send proper SIP response through session-core
         let session_coord = self.session_coordinator.as_ref()
             .ok_or_else(|| CallCenterError::internal(

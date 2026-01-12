@@ -9,8 +9,7 @@
 //!
 //! - **SIP Core**: SIP protocol implementation and message parsing
 //! - **SIP Transport**: Transport layer for SIP messages
-//! - **Transaction Core**: SIP transaction management
-//! - **Dialog Core**: SIP dialog state management
+//! - **Dialog Core**: SIP dialog and transaction state management
 //! - **RTP Core**: Real-time Transport Protocol implementation
 //! - **Media Core**: Audio/video processing and codec support
 //! - **Session Core**: Session management and coordination
@@ -37,8 +36,7 @@
 //! - [`call_engine`]: Call routing and business logic
 //! - [`rtp_core`]: RTP implementation
 //! - [`media_core`]: Media processing
-//! - [`dialog_core`]: Dialog state management
-//! - [`transaction_core`]: Transaction management
+//! - [`dialog_core`]: Dialog and Transaction state management
 //! - [`sip_transport`]: SIP transport layer
 
 #![deny(missing_docs)]
@@ -47,8 +45,8 @@
 // Re-export all crates as modules
 pub use rvoip_sip_core as sip_core;
 pub use rvoip_sip_transport as sip_transport;
-pub use rvoip_transaction_core as transaction_core;
 pub use rvoip_dialog_core as dialog_core;
+pub use rvoip_dialog_core::transaction as transaction_core;
 pub use rvoip_rtp_core as rtp_core;
 pub use rvoip_media_core as media_core;
 pub use rvoip_session_core as session_core;
@@ -84,8 +82,7 @@ pub mod prelude {
     //! - [`crate::call_engine`] - Call routing and business logic
     //! - [`crate::rtp_core`] - RTP implementation
     //! - [`crate::media_core`] - Media processing
-    //! - [`crate::dialog_core`] - Dialog state management
-    //! - [`crate::transaction_core`] - Transaction management
+    //! - [`crate::dialog_core`] - Dialog and Transaction management
     //! - [`crate::sip_transport`] - SIP transport layer
     
     // Note: We don't re-export specific types to avoid naming conflicts.

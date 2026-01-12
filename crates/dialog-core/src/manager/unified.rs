@@ -339,6 +339,20 @@ impl UnifiedDialogManager {
         Ok(())
     }
     
+    /// Set session coordinator for receiving orchestration events
+    pub async fn set_session_coordinator(&self, sender: mpsc::Sender<SessionCoordinationEvent>) -> ApiResult<()> {
+        debug!("UnifiedDialogManager: Forwarding session coordinator setup to core");
+        self.core.set_session_coordinator(sender).await;
+        Ok(())
+    }
+    
+    /// Set dialog event sender for external notifications
+    pub async fn set_dialog_event_sender(&self, sender: mpsc::Sender<DialogEvent>) -> ApiResult<()> {
+        debug!("UnifiedDialogManager: Forwarding dialog event sender setup to core");
+        self.core.set_dialog_event_sender(sender).await;
+        Ok(())
+    }
+    
     // REMOVED: Channel-based methods - use GlobalEventCoordinator instead
     // - set_session_coordinator()
     // - set_dialog_event_sender()

@@ -187,7 +187,18 @@ pub struct GeneralConfig {
     /// Race condition prevention delay in milliseconds
     ///
     /// Small delay to prevent race conditions during call termination.
+    /// Race condition prevention delay in milliseconds
+    ///
+    /// Small delay to prevent race conditions during call termination.
+    /// Default: 100ms
     pub bye_race_delay_ms: u64,
+
+    /// Enable Modern B2BUA Stack (Replaces Legacy Session Core)
+    ///
+    /// If true, the system uses `b2bua-core` and transparent bridging.
+    /// If false, it uses the legacy `session-core` signal coordination.
+    /// WARNING: Enabling this disables `session-core` to avoid port separation issues.
+    pub enable_modern_b2bua: bool,
 }
 
 /// Agent management configuration
@@ -756,6 +767,8 @@ impl Default for GeneralConfig {
             bye_timeout_seconds: 15,     // Increased from 5s to 15s for better reliability
             bye_retry_attempts: 3,       // Allow 3 retry attempts for failed BYEs
             bye_race_delay_ms: 100,      // 100ms delay to prevent race conditions
+            
+            enable_modern_b2bua: true,  // Use modern B2BUA stack (session-core-v3 compatible)
         }
     }
 }

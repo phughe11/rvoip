@@ -48,6 +48,7 @@ pub trait CrossCrateEvent: Send + Sync + std::fmt::Debug {
     fn source_plane(&self) -> PlaneType;
     fn target_plane(&self) -> PlaneType;
     fn priority(&self) -> EventPriority;
+    fn as_any(&self) -> &dyn Any;
 }
 
 impl CrossCrateEvent for RvoipCrossCrateEvent {
@@ -101,6 +102,10 @@ impl CrossCrateEvent for RvoipCrossCrateEvent {
             RvoipCrossCrateEvent::MediaToRtp(_) => EventPriority::Normal,
             RvoipCrossCrateEvent::RtpToMedia(_) => EventPriority::Normal,
         }
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

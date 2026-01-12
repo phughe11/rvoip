@@ -276,6 +276,8 @@ Complete end-to-end VoIP application architecture:
 ├─────────────────────────────────────────────────────────────┤
 │                        rvoip                                │
 │  ┌─────────────┬─────────────┬─────────────┬─────────────┐  │
+│  │b2bua-core   │proxy-core   │sbc-core     │media-server │  │
+│  ├─────────────┼─────────────┼─────────────┼─────────────┤  │
 │  │call-engine  │client-core  │session-core │             │  │
 │  ├─────────────┼─────────────┼─────────────┼─────────────┤  │
 │  │dialog-core  │media-core   │rtp-core     │             │  │
@@ -289,23 +291,28 @@ Complete end-to-end VoIP application architecture:
 
 ### **Component Overview**
 
+#### **Server & Policy Layer (New Phase 2 Components)**
+- **`b2bua-core`**: Back-to-Back User Agent for advanced call control and bridging
+- **`proxy-core`**: Stateful SIP Proxy with DNS SRV and Location Service
+- **`sbc-core`**: Session Border Controller for security and topology hiding
+- **`media-server-core`**: IVR, Conference Mixing, and DTMF handling
+
 #### **Application Layer (High-Level)**
-- **`call-engine`**: Complete call center with agent management and routing
-- **`client-core`**: SIP client applications and softphone functionality
-- **`session-core`**: Session coordination and call control operations
+- **`call-engine`**: Call center business logic (Agent/Queue)
+- **`client-core`**: SIP client applications
+- **`session-core`**: Unified session management
 
 #### **Protocol Layer (Core)**
-- **`dialog-core`**: SIP dialog state management and RFC 3261 compliance
-- **`transaction-core`**: SIP transaction handling and retransmission
-- **`sip-core`**: SIP message parsing and protocol primitives
+- **`dialog-core`**: SIP dialog state & Unified Transaction Manager
+- **`sip-core`**: SIP message parsing primitives
 
 #### **Media Layer (Real-Time)**
-- **`media-core`**: Audio processing, codecs, and quality monitoring
-- **`rtp-core`**: RTP/RTCP implementation and media transport
-- **`sip-transport`**: SIP transport layer (UDP, TCP, TLS)
+- **`media-core`**: Audio processing, mixers, codecs
+- **`rtp-core`**: RTP/RTCP transport
+- **`sip-transport`**: SIP Transport (UDP/TCP/TLS)
 
-#### **Infrastructure Layer (Common)**
-- **`infra-common`**: Shared utilities, logging, and configuration
+#### **Infrastructure Layer**
+- **`infra-common`**: Shared utilities
 
 ## 📦 **Installation**
 
@@ -846,16 +853,18 @@ The modular architecture makes it easy to contribute:
 
 | Component | Status | Description |
 |-----------|--------|-------------|
-| **call-engine** | ⚠️ Alpha | Call center with database, queuing, routing (alpha - not production ready) |
-| **client-core** | ⚠️ Alpha | SIP client applications with call control (alpha - not production ready) |
-| **session-core** | ⚠️ Alpha | Session coordination with media integration (alpha - not production ready) |
-| **dialog-core** | ⚠️ Alpha | SIP dialog management with RFC 3261 compliance (alpha - not production ready) |
-| **transaction-core** | ⚠️ Alpha | SIP transaction handling with retransmission (alpha - not production ready) |
-| **media-core** | ⚠️ Alpha | Audio processing with quality monitoring (alpha - not production ready) |
-| **rtp-core** | ⚠️ Alpha | RTP/RTCP implementation with SRTP support (alpha - not production ready) |
-| **sip-core** | ⚠️ Alpha | SIP message parsing and protocol primitives (alpha - not production ready) |
-| **sip-transport** | ⚠️ Alpha | Multi-transport SIP (UDP, TCP, TLS) (alpha - not production ready) |
-| **infra-common** | ⚠️ Alpha | Common utilities and infrastructure (alpha - not production ready) |
+| **b2bua-core** | ✅ Beta | Back-to-Back User Agent with Transparent Bridging & SBC (New) |
+| **sbc-core** | ✅ Beta | Session Border Controller with Topology Hiding (New) |
+| **media-server-core** | ✅ Beta | Conference Mixing, IVR, & DTMF Handling (New) |
+| **proxy-core** | ✅ Beta | Stateful Proxy with Load Balancing & Routing (New) |
+| **call-engine** | ⚠️ Alpha | Orchestrator unifying B2BUA, Media Server & Legacy Session Core |
+| **client-core** | ⚠️ Alpha | SIP client applications with call control |
+| **session-core** | ⚠️ Legacy | Session coordination (Legacy, being replaced by B2BUA) |
+| **dialog-core** | ✅ Beta | Unified Dialog & Transaction Manager (RFC 3261) |
+| **media-core** | ✅ Beta | Audio processing, Mixing & DSP |
+| **rtp-core** | ✅ Beta | RTP/RTCP implementation |
+| **sip-core** | ✅ Beta | SIP message parsing and protocol primitives |
+| **infra-common** | ✅ Stable | Common utilities and event bus |
 
 ## License
 

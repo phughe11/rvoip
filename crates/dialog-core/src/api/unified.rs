@@ -439,20 +439,18 @@ impl UnifiedDialogApi {
     /// # Ok(())
     /// # }
     /// ```
-    // REMOVED: Channel-based communication - use GlobalEventCoordinator instead
-    // pub async fn set_session_coordinator(&self, sender: mpsc::Sender<SessionCoordinationEvent>) -> ApiResult<()> {
-    //     debug!("Setting session coordinator");
-    //     self.manager.set_session_coordinator(sender).await
-    // }
+    pub async fn set_session_coordinator(&self, sender: mpsc::Sender<SessionCoordinationEvent>) -> ApiResult<()> {
+        debug!("Setting session coordinator");
+        self.manager.set_session_coordinator(sender).await
+    }
     
     /// Set dialog event sender
     ///
     /// Establishes dialog event communication for external consumers.
-    // REMOVED: Channel-based communication - use GlobalEventCoordinator instead  
-    // pub async fn set_dialog_event_sender(&self, sender: mpsc::Sender<DialogEvent>) -> ApiResult<()> {
-    //     debug!("Setting dialog event sender");
-    //     self.manager.set_dialog_event_sender(sender).await
-    // }
+    pub async fn set_dialog_event_sender(&self, sender: mpsc::Sender<DialogEvent>) -> ApiResult<()> {
+        debug!("Setting dialog event sender");
+        self.manager.set_dialog_event_sender(sender).await
+    }
     
     // REMOVED: subscribe_to_dialog_events() - Use GlobalEventCoordinator instead
     

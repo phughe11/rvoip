@@ -89,15 +89,12 @@ impl SessionDialogCoordinator {
     
     /// Initialize session coordination with dialog-core
     pub async fn initialize(&self, session_events_tx: mpsc::Sender<SessionCoordinationEvent>) -> DialogResult<()> {
-        // Set up session coordination with dialog-core
-        tracing::debug!("🔗 SETUP: Setting up session coordination with dialog-core");
-        self.dialog_api
-            .set_session_coordinator(session_events_tx)
-            .await
-            .map_err(|e| DialogError::Coordination {
-                message: format!("Failed to set session coordinator: {}", e),
+        tracing::debug!("🔗 SETUP: Injecting session coordination channel into UnifiedDialogApi");
+        
+        self.dialog_api.set_session_coordinator(session_events_tx).await
+            .map_err(|e| DialogError::Configuration { 
+                message: format!("Failed to set session coordinator: {}", e) 
             })?;
-        tracing::debug!("✅ SETUP: Session coordination setup complete");
         
         Ok(())
     }
