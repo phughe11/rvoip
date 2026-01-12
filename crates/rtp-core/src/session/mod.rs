@@ -14,7 +14,7 @@ use rand::Rng;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use tokio::net::UdpSocket;
 use tokio::sync::{mpsc, broadcast};
 use tokio::task::JoinHandle;
@@ -23,7 +23,7 @@ use tracing::{error, warn, debug, trace, info};
 use crate::error::Error;
 use crate::packet::{RtpHeader, RtpPacket};
 use crate::transport::{RtpTransport, RtpTransportConfig, UdpRtpTransport};
-use crate::{Result, RtpSequenceNumber, RtpSsrc, RtpTimestamp, DEFAULT_MAX_PACKET_SIZE};
+use crate::{Result, RtpSsrc, RtpTimestamp};
 
 // Define the constant locally since it's not publicly exported
 const RTP_MIN_HEADER_SIZE: usize = 12;

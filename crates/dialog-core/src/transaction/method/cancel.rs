@@ -51,12 +51,10 @@
 //! CANCEL requests according to the rules in RFC 3261.
 
 use std::net::SocketAddr;
-use std::sync::Arc;
 
 use rvoip_sip_core::prelude::*;
 use rvoip_sip_core::types::CSeq;
 use rvoip_sip_core::types::MaxForwards;
-use uuid::Uuid;
 
 use crate::transaction::error::{Error, Result};
 use crate::transaction::TransactionKey;

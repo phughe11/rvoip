@@ -4,11 +4,11 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{info, warn, error, debug};
 use std::time::Duration;
+use uuid::Uuid;
 
 use crate::errors::{Result, SessionError};
-// Assuming we have access to a transaction manager or dialog manager
-// If not, we need to define how we send requests.
-// For V3, we likely use `dialog-core` directly or via an adapter.
+use crate::adapters::DialogAdapter;
+use crate::state_table::types::SessionId;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum RegistrationState {
@@ -19,7 +19,8 @@ pub enum RegistrationState {
 }
 
 pub struct RegistrationManager {
-    // coordinator: std::sync::Arc<UnifiedCoordinator>, // Refactoring to not depend on undefined types
+    dialog_adapter: Arc<DialogAdapter>,
+    session_id: SessionId,
     registrar_uri: String,
     user_aor: String, // Address of Record (sip:user@domain)
     auth_user: Option<String>,
@@ -30,12 +31,15 @@ pub struct RegistrationManager {
 
 impl RegistrationManager {
     pub fn new(
+        dialog_adapter: Arc<DialogAdapter>,
         registrar_uri: String, 
         user_aor: String,
         auth_user: Option<String>,
         auth_pass: Option<String>
     ) -> Self {
         Self {
+            dialog_adapter,
+            session_id: SessionId(Uuid::new_v4().to_string()),
             registrar_uri,
             user_aor,
             auth_user,
@@ -47,21 +51,27 @@ impl RegistrationManager {
 
     /// Start registration flow
     pub async fn register(&self) -> Result<()> {
-        info!("Starting registration for {} at {}", self.user_aor, self.registrar_uri);
+        info!("Starting registration for {} at {} (Session: {})", 
+              self.user_aor, self.registrar_uri, self.session_id.0);
         
         {
             let mut state = self.state.write().await;
             *state = RegistrationState::Registering;
         }
 
-        // TODO: Integrate with DialogCore / Transaction Layer to send actual SIP messages.
-        // For now, we simulate the state transition to allow B2BUA testing to proceed.
-        // In a real implementation:
-        // 1. TransactionClient::send_request(REGISTER)
-        // 2. Await response
-        // 3. Handle 401/200
+        // Send actual SIP REGISTER request via DialogAdapter
+        // This will create a transaction in dialog-core and send the packet
+        self.dialog_adapter.send_register(
+            &self.session_id,
+            &self.user_aor,
+            &self.registrar_uri,
+            self.expires
+        ).await?;
         
-        self.simulate_successful_registration().await;
+        debug!("REGISTER request sent");
+        
+        // Note: State update to 'Registered' happens asynchronously upon receiving 200 OK event.
+        // For this implementation, we rely on the event system or polling to update state.
         
         Ok(())
     }
@@ -69,7 +79,13 @@ impl RegistrationManager {
     /// Unregister (REGISTER with expires=0)
     pub async fn unregister(&self) -> Result<()> {
         info!("Unregistering {}", self.user_aor);
-        // TODO: Send REGISTER with expires=0
+        
+        self.dialog_adapter.send_register(
+            &self.session_id,
+            &self.user_aor,
+            &self.registrar_uri,
+            0 // Expires 0 means unregister
+        ).await?;
         
         let mut state = self.state.write().await;
         *state = RegistrationState::Unregistered;
@@ -79,15 +95,5 @@ impl RegistrationManager {
     /// Get current state
     pub async fn get_state(&self) -> RegistrationState {
         self.state.read().await.clone()
-    }
-
-    async fn simulate_successful_registration(&self) {
-        debug!("Simulating registration success (Stub)");
-        tokio::time::sleep(Duration::from_millis(100)).await;
-        let mut state = self.state.write().await;
-        *state = RegistrationState::Registered {
-            expires: std::time::Instant::now() + Duration::from_secs(self.expires as u64)
-        };
-        info!("Registration successful (Simulated)");
     }
 }

@@ -13,12 +13,11 @@ use std::sync::Arc;
 use std::time::Duration;
 use async_trait::async_trait;
 
-use crate::events::types::{Event, EventResult, EventError, EventFilter, StaticEvent};
+use crate::events::types::{Event, EventResult, EventFilter};
 use crate::events::bus::{EventBus, EventBusConfig};
 use crate::events::api::{self, EventSystem as EventSystemTrait};
 use crate::events::static_path::StaticFastPathSystem;
 use crate::events::zero_copy::ZeroCopySystem;
-use crate::events::builder::{ImplementationType, EventSystemBuilder};
 
 /// Unified event system that provides a common interface to both implementations.
 ///

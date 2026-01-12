@@ -5,10 +5,8 @@
 
 use std::sync::{Arc, Mutex};
 use std::collections::VecDeque;
-use std::time::Instant;
 use tracing::{debug, warn};
-use crate::types::{AudioFrame, SampleRate};
-use crate::performance::zero_copy::{ZeroCopyAudioFrame, SharedAudioBuffer};
+use crate::performance::zero_copy::ZeroCopyAudioFrame;
 
 /// Configuration for audio frame pool
 #[derive(Debug, Clone)]

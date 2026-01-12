@@ -390,7 +390,6 @@ use crate::transaction::builders::dialog_quick;
 use rvoip_sip_core::{Uri, Method, Response, StatusCode};
 
 use crate::manager::DialogManager;
-use crate::events::SessionCoordinationEvent;
 use crate::dialog::{DialogId, Dialog, DialogState};
 use super::{
     ApiResult, ApiError, DialogApi, DialogStats,

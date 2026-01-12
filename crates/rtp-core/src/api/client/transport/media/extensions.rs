@@ -4,10 +4,6 @@
 //! adding extensions to outgoing packets, and extracting them from incoming packets.
 
 use std::collections::HashMap;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
-use tokio::sync::Mutex;
-use tracing::{debug, warn, info};
 
 use crate::api::common::error::MediaTransportError;
 use crate::api::common::extension::ExtensionFormat;

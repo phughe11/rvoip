@@ -176,7 +176,6 @@
 /// 3. Functions to validate state transitions according to RFC 3261 rules
 
 use std::sync::atomic::{AtomicU8, Ordering};
-use crate::transaction::error::{Error, Result};
 use crate::transaction::TransactionKind;
 
 /// Represents the state of a SIP transaction, aligned with the state machines

@@ -1,7 +1,7 @@
 //! CPAL backend for real audio device access
 
 use crate::error::{AudioError, AudioResult};
-use crate::types::{AudioDeviceInfo, AudioDirection, AudioFormat};
+use crate::types::{AudioDeviceInfo, AudioDirection};
 use super::AudioDevice;
 use std::sync::Arc;
 

@@ -318,9 +318,8 @@
 //! ```
 
 use std::collections::HashMap;
-use std::sync::Arc;
 use std::str::FromStr;
-use tracing::{info, debug, warn};
+use tracing::{info, warn};
 
 use rvoip_session_core::SessionId;
 

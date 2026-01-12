@@ -10,11 +10,11 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use std::collections::HashMap;
 use tokio::sync::RwLock;
-use tracing::{info, debug, warn, error};
+use tracing::{info, debug, error};
 
 use crate::api::common::config::{KeyExchangeMethod, SecurityConfig, SrtpProfile};
 use crate::api::common::error::SecurityError;
-use crate::srtp::{SrtpContext, SrtpCryptoSuite, crypto::SrtpCryptoKey};
+use crate::srtp::{SrtpContext, crypto::SrtpCryptoKey};
 
 /// Key rotation policy defines when keys should be rotated
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -580,7 +580,7 @@ impl KeyManager {
                     loop {
                         rotation_interval.tick().await;
                         
-                        if let Some(mut store) = key_store.write().await.as_mut() {
+                        if let Some(store) = key_store.write().await.as_mut() {
                             if let Err(e) = store.rotate_keys() {
                                 error!("Automatic key rotation failed: {}", e);
                             } else {

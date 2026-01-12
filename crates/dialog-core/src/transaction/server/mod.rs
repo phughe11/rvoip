@@ -46,21 +46,17 @@ mod non_invite;
 mod data;
 pub mod builders;
 
-pub use common::*;
 pub use invite::ServerInviteTransaction;
 pub use non_invite::ServerNonInviteTransaction;
 pub use data::{ServerTransactionData, CommandSender, CommandReceiver, CommonServerTransaction};
 
 use async_trait::async_trait;
-use std::net::SocketAddr;
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::Arc;
 
 use crate::transaction::error::Result;
-use crate::transaction::{Transaction, TransactionState, TransactionKey, TransactionAsync};
+use crate::transaction::{Transaction, TransactionAsync};
 use rvoip_sip_core::prelude::*;
-use rvoip_sip_core::json::ext::SipMessageJson;
 
 /// Common interface for server transactions, implementing the behavior defined in RFC 3261 Section 17.2.
 ///

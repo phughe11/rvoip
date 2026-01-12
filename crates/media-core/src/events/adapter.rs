@@ -5,22 +5,21 @@
 //! while maintaining backward compatibility with existing media event handling.
 
 use std::sync::Arc;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::RwLock;
 use anyhow::Result;
 use async_trait::async_trait;
-use tracing::{debug, info, warn, error};
+use tracing::{debug, info, error};
 
 use rvoip_infra_common::events::coordinator::{GlobalEventCoordinator, CrossCrateEventHandler};
 use rvoip_infra_common::events::cross_crate::{
     RvoipCrossCrateEvent, MediaToSessionEvent, MediaToRtpEvent,
-    SessionToMediaEvent, RtpToMediaEvent, CrossCrateEvent,
-    MediaQualityMetrics, MediaStreamConfig, RecordingFormat
+    SessionToMediaEvent, CrossCrateEvent,
+    MediaQualityMetrics
 };
 use rvoip_infra_common::planes::LayerTaskManager;
 
 use crate::session::events::{MediaSessionEventType, QualitySeverity};
 use crate::integration::events::IntegrationEventType;
-use crate::types::{MediaSessionId, DialogId};
 
 /// Media Event Adapter that bridges local media events with global cross-crate events
 pub struct MediaEventAdapter {

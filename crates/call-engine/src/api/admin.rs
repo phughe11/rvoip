@@ -346,13 +346,6 @@
 //! # }
 //! ```
 
-use axum::{
-    Router,
-    routing::{get, post, put, delete},
-    extract::{State, Path},
-    response::Json,
-    http::StatusCode,
-};
 use std::sync::Arc;
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
@@ -362,7 +355,6 @@ use crate::{
     agent::{Agent, AgentStatus, AgentId},
     config::{CallCenterConfig, QueueConfig, RoutingConfig},
     error::{CallCenterError, Result as CallCenterResult},
-    queue::QueueStats,
 };
 
 /// # Administrative API for Call Center Management

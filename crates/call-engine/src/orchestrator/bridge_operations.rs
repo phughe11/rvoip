@@ -457,7 +457,6 @@
 
 use std::sync::Arc;
 use tracing::{info, warn};
-use tokio::sync::mpsc;
 use rvoip_session_core::{SessionId, BridgeId, BridgeInfo, BridgeEvent};
 
 use crate::agent::AgentId;
@@ -469,15 +468,19 @@ impl CallCenterEngine {
     pub async fn create_conference(&self, session_ids: &[SessionId]) -> CallCenterResult<BridgeId> {
         info!("🎤 Creating conference with {} participants", session_ids.len());
         
+        // Check if session coordinator is available
+        let coordinator = self.session_coordinator.as_ref()
+            .ok_or_else(|| CallCenterError::orchestration("Session coordinator not available for conference creation"))?;
+
         // **REAL**: Create bridge using session-core API
-        let bridge_id = self.session_coordinator.as_ref().unwrap()
+        let bridge_id = coordinator
             .create_bridge()
             .await
             .map_err(|e| CallCenterError::orchestration(&format!("Failed to create conference bridge: {}", e)))?;
         
         // **REAL**: Add all sessions to the bridge
         for session_id in session_ids {
-            self.session_coordinator.as_ref().unwrap()
+            coordinator
                 .add_session_to_bridge(&bridge_id, session_id)
                 .await
                 .map_err(|e| CallCenterError::orchestration(&format!("Failed to add session {} to conference: {}", session_id, e)))?;
@@ -538,26 +541,38 @@ impl CallCenterEngine {
     
     /// Get real-time bridge information for monitoring
     pub async fn get_bridge_info(&self, bridge_id: &BridgeId) -> CallCenterResult<BridgeInfo> {
-        self.session_coordinator.as_ref().unwrap()
-            .get_bridge_info(bridge_id)
-            .await
-            .map_err(|e| CallCenterError::orchestration(&format!("Failed to get bridge info: {}", e)))?
-            .ok_or_else(|| CallCenterError::not_found(format!("Bridge not found: {}", bridge_id)))
+        if let Some(coordinator) = &self.session_coordinator {
+            coordinator
+                .get_bridge_info(bridge_id)
+                .await
+                .map_err(|e| CallCenterError::orchestration(&format!("Failed to get bridge info: {}", e)))?
+                .ok_or_else(|| CallCenterError::not_found(format!("Bridge not found: {}", bridge_id)))
+        } else {
+             Err(CallCenterError::orchestration("Session coordinator not available"))
+        }
     }
     
     /// List all active bridges for dashboard
     pub async fn list_active_bridges(&self) -> Vec<BridgeInfo> {
-        self.session_coordinator.as_ref().unwrap().list_bridges().await
+        if let Some(coordinator) = &self.session_coordinator {
+            coordinator.list_bridges().await
+        } else {
+            // TODO: Retrieve bridges/calls from B2BUA engine if available
+            vec![]
+        }
     }
     
     /// Subscribe to bridge events for real-time monitoring
     pub async fn start_bridge_monitoring(&mut self) -> CallCenterResult<()> {
         info!("👁️ Starting bridge event monitoring");
         
-        // **REAL**: Subscribe to session-core bridge events
-        let event_receiver = self.session_coordinator.as_ref().unwrap()
-            .subscribe_to_bridge_events().await;
-        self.bridge_events = Some(event_receiver);
+        if let Some(coordinator) = &self.session_coordinator {
+            // **REAL**: Subscribe to session-core bridge events
+            let event_receiver = coordinator.subscribe_to_bridge_events().await;
+            self.bridge_events = Some(event_receiver);
+        } else {
+            warn!("Session coordinator not available - skipping bridge monitoring subscription");
+        }
         
         // Process events in background task
         if let Some(mut receiver) = self.bridge_events.take() {

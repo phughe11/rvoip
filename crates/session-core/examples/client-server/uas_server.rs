@@ -13,12 +13,12 @@ use rvoip_session_core::{
     SessionCoordinator,
     MediaControl,
     api::{
-        CallHandler, CallSession, CallState, IncomingCall, CallDecision,
+        CallHandler, CallSession, IncomingCall, CallDecision,
         SessionManagerConfig,
     },
 };
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use tokio::sync::Mutex;
 use tokio::time::sleep;
 use tracing::{info, error, warn};

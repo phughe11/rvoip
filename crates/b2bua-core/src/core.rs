@@ -11,7 +11,7 @@ use rvoip_dialog_core::transaction::TransactionManager;
 use tracing::info;
 use rvoip_infra_common::events::{EventCoordinatorConfig, GlobalEventCoordinator};
 use rvoip_infra_common::events::coordinator::CrossCrateEventHandler;
-use rvoip_infra_common::events::cross_crate::{RvoipCrossCrateEvent, DialogToSessionEvent, CrossCrateEvent};
+use rvoip_infra_common::events::cross_crate::CrossCrateEvent;
 use rvoip_dialog_core::events::DialogEventHub;
 use async_trait::async_trait;
 use tracing::warn;
@@ -132,23 +132,27 @@ impl B2buaEngine {
     ///
     /// # Arguments
     /// * `transaction_manager` - Shared transaction manager for SIP transport
+    /// * `transaction_events` - Receiver for new transaction events (incoming requests)
     /// * `local_port` - Port to listen on for incoming SIP
     /// * `request_processor` - Optional security processor (e.g., from SBC)
     pub async fn new(
         transaction_manager: Arc<TransactionManager>,
+        transaction_events: tokio::sync::mpsc::Receiver<rvoip_dialog_core::transaction::TransactionEvent>,
         local_port: u16,
     ) -> Result<Self> {
-        Self::with_processor(transaction_manager, local_port, None).await
+        Self::with_processor(transaction_manager, transaction_events, local_port, None).await
     }
 
     /// Create a new B2BUA Engine with an optional request processor
     ///
     /// # Arguments
     /// * `transaction_manager` - Shared transaction manager for SIP transport
+    /// * `transaction_events` - Receiver for new transaction events (incoming requests)
     /// * `local_port` - Port to listen on for incoming SIP
     /// * `request_processor` - Optional security processor (e.g., SBC) for rate limiting/topology hiding
     pub async fn with_processor(
         transaction_manager: Arc<TransactionManager>,
+        transaction_events: tokio::sync::mpsc::Receiver<rvoip_dialog_core::transaction::TransactionEvent>,
         local_port: u16,
         request_processor: Option<Arc<dyn RequestProcessor>>,
     ) -> Result<Self> {
@@ -160,9 +164,12 @@ impl B2buaEngine {
 
         info!("Initializing B2BUA Engine on port {}", local_port);
 
-        let dialog_manager = UnifiedDialogManager::new(transaction_manager, config)
-            .await
-            .context("Failed to create UnifiedDialogManager")?;
+        // USE with_global_events to ensure we process incoming requests!
+        let dialog_manager = UnifiedDialogManager::with_global_events(
+            transaction_manager, 
+            transaction_events, 
+            config
+        ).await.context("Failed to create UnifiedDialogManager")?;
             
         // Use provided processor or default to no-op
         let processor: Arc<dyn RequestProcessor> = request_processor

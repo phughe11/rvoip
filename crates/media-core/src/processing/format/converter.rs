@@ -3,7 +3,7 @@
 //! This module handles conversion between different audio formats including
 //! sample rate conversion, channel layout changes, and bit depth conversion.
 
-use tracing::{debug, warn};
+use tracing::debug;
 use crate::error::{Result, AudioProcessingError};
 use crate::types::{AudioFrame, SampleRate};
 use super::resampler::Resampler;

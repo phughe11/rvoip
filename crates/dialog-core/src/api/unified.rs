@@ -142,7 +142,7 @@
 use std::sync::Arc;
 use std::net::SocketAddr;
 use tokio::sync::mpsc;
-use tracing::{info, debug, warn, error};
+use tracing::{info, debug, error};
 
 use crate::transaction::{TransactionManager, TransactionKey, TransactionEvent};
 use rvoip_sip_core::{Request, Response, Method, StatusCode};

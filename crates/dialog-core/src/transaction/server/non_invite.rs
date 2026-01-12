@@ -1,9 +1,7 @@
-use std::fmt;
 use std::future::Future;
 use std::net::SocketAddr;
 use std::pin::Pin;
 use std::sync::Arc;
-use std::time::Duration;
 use tokio::sync::{mpsc, Mutex};
 use tokio::task::JoinHandle;
 use tracing::{debug, error, trace, warn};
@@ -21,9 +19,8 @@ use crate::transaction::server::{
     ServerTransaction, ServerTransactionData, CommonServerTransaction
 };
 use crate::transaction::logic::TransactionLogic;
-use crate::transaction::runner::{run_transaction_loop, HasCommandSender, AsRefKey};
+use crate::transaction::runner::run_transaction_loop;
 use crate::transaction::timer_utils;
-use crate::transaction::validators;
 use crate::transaction::common_logic;
 use crate::transaction::utils;
 

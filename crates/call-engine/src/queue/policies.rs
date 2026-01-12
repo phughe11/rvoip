@@ -5,9 +5,9 @@
 //! management based on customer priority, call type, business rules, and performance targets.
 
 use std::collections::HashMap;
-use chrono::{DateTime, Utc, Timelike, Datelike};
+use chrono::{DateTime, Utc, Datelike};
 use serde::{Serialize, Deserialize};
-use tracing::{info, debug, warn};
+use tracing::{info, warn};
 
 use crate::error::{CallCenterError, Result};
 

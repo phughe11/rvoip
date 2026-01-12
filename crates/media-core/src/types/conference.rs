@@ -4,11 +4,9 @@
 //! including participant management, mixing configuration, and
 //! conference-specific events.
 
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use super::{AudioFrame, MediaSessionId};
-use crate::error::Result;
+use super::AudioFrame;
 
 /// Unique identifier for a conference participant
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

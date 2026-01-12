@@ -8,8 +8,8 @@ use std::collections::HashMap;
 use chrono::{DateTime, Utc};
 use tracing::{info, debug, warn};
 
-use crate::error::{CallCenterError, Result};
-use crate::agent::{AgentId, Agent, AgentStatus};
+use crate::error::Result;
+use crate::agent::AgentStatus;
 
 /// # Skill-Based Router for Agent Selection
 ///

@@ -6,14 +6,12 @@
 
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::{info, debug, warn, error};
+use tracing::{info, debug, warn};
 use chrono::{DateTime, Utc};
-use tokio::sync::{broadcast, mpsc, RwLock};
+use tokio::sync::{broadcast, RwLock};
 use uuid::Uuid;
 
-use crate::error::{CallCenterError, Result};
-use crate::agent::{AgentId, AgentStatus};
-use crate::queue::QueueStats;
+use crate::error::Result;
 
 /// # Call Center Events System
 ///

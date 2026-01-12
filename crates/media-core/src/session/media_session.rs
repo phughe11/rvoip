@@ -5,14 +5,14 @@
 
 use std::sync::Arc;
 use tokio::sync::{RwLock, mpsc};
-use tracing::{debug, warn, info, error};
+use tracing::{debug, warn, info};
 
 use crate::error::{Result, MediaSessionError};
-use crate::types::{MediaSessionId, DialogId, AudioFrame, MediaPacket, MediaType, MediaDirection};
+use crate::types::{MediaSessionId, DialogId, AudioFrame, MediaPacket, MediaType};
 use crate::codec::audio::common::AudioCodec;
 use crate::processing::audio::AudioProcessor;
 use crate::quality::{QualityMonitor, QualityMetrics};
-use super::events::{MediaSessionEvent, MediaSessionEventType, QualitySeverity};
+use super::events::MediaSessionEvent;
 
 /// Media session state
 #[derive(Debug, Clone, PartialEq, Eq)]

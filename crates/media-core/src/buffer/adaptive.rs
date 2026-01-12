@@ -7,7 +7,7 @@ use std::collections::VecDeque;
 use tokio::sync::RwLock;
 use tracing::{debug, trace};
 
-use crate::error::{Result, BufferError};
+use crate::error::Result;
 
 /// Configuration for adaptive buffer
 #[derive(Debug, Clone)]

@@ -5,10 +5,7 @@
 //! This module supports both one-byte and two-byte header extension formats,
 //! as well as the legacy RFC 5285 format.
 
-use bytes::{Buf, BufMut, Bytes, BytesMut};
-use std::collections::HashMap;
-use std::fmt;
-use tracing::{debug, warn};
+use bytes::{BufMut, Bytes, BytesMut};
 
 use crate::error::Error;
 use crate::Result;

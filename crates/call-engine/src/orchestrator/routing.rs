@@ -526,13 +526,12 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use tracing::{debug, info, error, warn};
 use rvoip_session_core::{IncomingCall, SessionId};
-use uuid::Uuid;
 
-use crate::agent::{Agent, AgentId, AgentStatus};
+use crate::agent::{AgentId, AgentStatus};
 use crate::error::{Result as CallCenterResult, CallCenterError};
 use crate::queue::QueuedCall;
 use super::core::CallCenterEngine;
-use super::types::{CustomerType, RoutingDecision, AgentInfo};
+use super::types::{CustomerType, RoutingDecision};
 
 impl CallCenterEngine {
     /// Analyze customer information to determine routing requirements

@@ -5,7 +5,6 @@
 //! requirements automatically and provide sensible defaults.
 
 use std::net::SocketAddr;
-use std::str::FromStr;
 use uuid::Uuid;
 use rvoip_sip_core::prelude::*;
 use rvoip_sip_core::types::{

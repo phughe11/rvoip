@@ -13,11 +13,9 @@
 //! SBC also implements `RequestProcessor` trait from b2bua-core, allowing it to be
 //! injected into B2BUA for security processing.
 
-use std::sync::Arc;
 use anyhow::Result;
-use async_trait::async_trait;
 use tracing::{info, debug};
-use rvoip_sip_core::{Request, Response, Header, HeaderName};
+use rvoip_sip_core::{Request, HeaderName};
 use std::net::IpAddr;
 
 mod rate_limit;

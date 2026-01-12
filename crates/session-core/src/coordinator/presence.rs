@@ -9,17 +9,12 @@
 
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::RwLock;
 use dashmap::DashMap;
-use tracing::{debug, info, warn, error};
+use tracing::{debug, info, warn};
 use chrono::{DateTime, Utc};
 
 use rvoip_dialog_core::DialogId;
-use rvoip_sip_core::{
-    Method, Request, Response, StatusCode,
-    types::pidf::{Presence, BasicStatus, Status, Tuple},
-    builder::SimpleRequestBuilder,
-};
+use rvoip_sip_core::types::pidf::{Presence, BasicStatus, Status, Tuple};
 
 use crate::errors::{Result, SessionError};
 use crate::dialog::DialogManager;

@@ -4,7 +4,7 @@
 //! about how to handle incoming calls, including direct agent assignment,
 //! queue routing, and call rejection based on business rules and system capacity.
 
-use crate::error::{CallCenterError, Result};
+use crate::error::Result;
 
 /// # Main Routing Engine for Call Distribution
 ///

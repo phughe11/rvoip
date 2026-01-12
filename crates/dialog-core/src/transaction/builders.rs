@@ -4,7 +4,6 @@
 //! as well as helper functions for extracting dialog information from SIP messages.
 
 use rvoip_sip_core::{Request, Response};
-use crate::transaction::error::Result;
 
 /// Client-side request builders for common SIP operations
 pub use crate::transaction::client::builders::{

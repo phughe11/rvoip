@@ -3,9 +3,8 @@
 //! This module implements state-of-the-art AEC using frequency-domain processing,
 //! multi-delay adaptive filtering, and advanced double-talk detection.
 
-use std::f32::consts::PI;
 use num_complex::Complex;
-use tracing::{debug, trace};
+use tracing::debug;
 use crate::error::{Result, AudioProcessingError};
 use crate::types::AudioFrame;
 

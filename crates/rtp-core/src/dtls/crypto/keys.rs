@@ -2,7 +2,7 @@
 //!
 //! This module handles key derivation and management for DTLS.
 
-use bytes::{Bytes, BytesMut, BufMut};
+use bytes::{Bytes, BytesMut};
 use crate::dtls::Result;
 use crate::dtls::crypto::cipher::{HashAlgorithm, MacAlgorithm};
 

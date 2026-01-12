@@ -27,25 +27,22 @@ use std::sync::Arc;
 use std::str::FromStr;
 
 use tokio::sync::{Mutex, mpsc};
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, warn};
 
 use rvoip_sip_core::prelude::*;
-use rvoip_sip_core::json::ext::SipMessageJson;
 use rvoip_sip_transport::{Transport, TransportEvent};
 
-use crate::transaction::error::{self, Error, Result};
+use crate::transaction::error::{Error, Result};
 use crate::transaction::{
     Transaction, TransactionAsync, TransactionState, TransactionKind, TransactionKey, TransactionEvent,
-    InternalTransactionCommand,
 };
 use crate::transaction::state::TransactionLifecycle;
 use crate::transaction::runner::HasLifecycle;
-use crate::transaction::client::{ClientTransaction, TransactionExt as ClientTransactionExt, ClientInviteTransaction, ClientNonInviteTransaction};
-use crate::transaction::server::{ServerTransaction, TransactionExt as ServerTransactionExt, ServerInviteTransaction, ServerNonInviteTransaction};
-use crate::transaction::utils::{self, transaction_key_from_message, create_ack_from_invite};
+use crate::transaction::client::ClientTransaction;
+use crate::transaction::server::ServerTransaction;
+use crate::transaction::utils::{transaction_key_from_message, create_ack_from_invite};
 
 use super::TransactionManager;
-use super::types::*;
 
 /// Handle transport message events and route them to appropriate transactions.
 ///
@@ -395,7 +392,7 @@ pub async fn handle_transport_message(
                     }
                     
                     // Handle regular request retransmission and new requests
-                    let mut server_txs = server_transactions.lock().await;
+                    let server_txs = server_transactions.lock().await;
                     
                     // Check if we have a matching transaction
                     if server_txs.contains_key(&tx_id) {
@@ -446,7 +443,7 @@ pub async fn handle_transport_message(
                     };
                     
                     // Look up the client transaction using the same pattern
-                    let mut client_txs = client_transactions.lock().await;
+                    let client_txs = client_transactions.lock().await;
                     
                     // Check if we have a matching transaction
                     if client_txs.contains_key(&tx_id) {
@@ -636,7 +633,7 @@ pub fn create_via_header(local_addr: &SocketAddr, branch: &str) -> Result<TypedH
     use rvoip_sip_core::types::Param;
     
     // Create a new Via header with the specified branch parameter
-    let mut via_params = vec![Param::branch(branch.to_string())];
+    let via_params = vec![Param::branch(branch.to_string())];
     
     // Add other params like rport if needed
     // Example: via_params.push(Param::other("rport".to_string(), None));

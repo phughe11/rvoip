@@ -2,7 +2,6 @@ use anyhow::Result;
 use clap::Parser;
 use rvoip_call_engine::prelude::*;
 use tracing::{info, warn};
-use std::sync::Arc;
 
 /// RVOIP: Rust VoIP Server / Call Center Engine
 #[derive(Parser, Debug)]

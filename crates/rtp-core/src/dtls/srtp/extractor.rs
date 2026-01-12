@@ -2,7 +2,6 @@
 //!
 //! This module implements SRTP key extraction from DTLS handshakes.
 
-use bytes::Bytes;
 use crate::dtls::Result;
 use crate::dtls::crypto::keys::{DtlsKeyingMaterial, extract_srtp_keys};
 use crate::dtls::message::extension::SrtpProtectionProfile;

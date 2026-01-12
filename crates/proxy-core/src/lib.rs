@@ -11,11 +11,11 @@
 use std::sync::Arc;
 use std::net::SocketAddr;
 use tokio::sync::mpsc;
-use tracing::{info, debug, warn, error};
+use tracing::{info, debug, error};
 use anyhow::Result;
 
 use rvoip_dialog_core::transaction::{TransactionManager, TransactionEvent};
-use rvoip_sip_core::{Request, Response, Method, StatusCode, ResponseBuilder};
+use rvoip_sip_core::{Request, Method, StatusCode, ResponseBuilder};
 
 mod load_balancer;
 use load_balancer::{LoadBalancer, RoundRobinLoadBalancer};

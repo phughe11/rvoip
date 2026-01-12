@@ -4,7 +4,6 @@
 
 use async_trait::async_trait;
 use std::net::SocketAddr;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Trait for load balancing strategies

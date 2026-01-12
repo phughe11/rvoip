@@ -1,9 +1,7 @@
-use bytes::{Bytes, BytesMut, Buf, BufMut};
 use hmac::{Hmac, Mac};
 use sha1::Sha1;
 use crate::error::Error;
 use crate::Result;
-use crate::packet::RtpPacket;
 use super::SrtpAuthenticationAlgorithm;
 
 // Define type for HMAC-SHA1

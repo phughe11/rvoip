@@ -6,7 +6,7 @@
 use async_trait::async_trait;
 use std::time::Duration;
 use std::collections::HashMap;
-use crate::errors::{Result, SessionError};
+use crate::errors::Result;
 
 /// Handle for tracking registration state
 #[derive(Debug, Clone)]

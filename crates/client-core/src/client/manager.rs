@@ -8,7 +8,6 @@ use uuid::Uuid;
 use rvoip_session_core::api::{
     SessionCoordinator,
     SessionManagerBuilder,
-    SessionManagerConfig,
     SessionControl,
     MediaControl,
     SipClient,
@@ -493,7 +492,7 @@ impl ClientManager {
             })?;
 
             
-        let mut stats = ClientStats {
+        let stats = ClientStats {
             is_running: false,
             local_sip_addr: config.local_sip_addr,
             local_media_addr: config.local_media_addr,

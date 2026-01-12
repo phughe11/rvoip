@@ -5,9 +5,8 @@
 //! Temporal-Spatial Trade-off (TSTO), REMB, and Transport-wide Congestion Control.
 
 use crate::{Result, RtpSsrc, Error};
-use crate::feedback::{FeedbackPacketType, PayloadFeedbackFormat, TransportCcFormat};
+use crate::feedback::FeedbackPacketType;
 use bytes::{Buf, BufMut, Bytes, BytesMut};
-use std::collections::HashMap;
 
 /// RTCP common header size (4 bytes)
 pub const RTCP_HEADER_SIZE: usize = 4;

@@ -6,9 +6,9 @@
 
 use std::collections::HashMap;
 use chrono::{DateTime, Utc};
-use tracing::{info, warn, error};
+use tracing::{info, warn};
 
-use crate::error::{CallCenterError, Result};
+use crate::error::Result;
 
 /// # Overflow Handler for Queue Management
 ///

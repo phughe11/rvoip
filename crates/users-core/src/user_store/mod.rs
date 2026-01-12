@@ -1,7 +1,7 @@
 //! User storage interface
 
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use sqlx::{SqlitePool, Row};
 use crate::{Result, Error, User, CreateUserRequest, UpdateUserRequest, UserFilter};
 

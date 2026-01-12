@@ -3,7 +3,6 @@
 //! Handles conversion between session-level configuration and 
 //! dialog-core SIP configuration.
 
-use std::net::SocketAddr;
 use crate::api::builder::SessionManagerConfig;
 use crate::dialog::{DialogError, DialogResult};
 

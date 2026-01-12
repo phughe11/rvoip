@@ -5,7 +5,7 @@ use sqlx::{SqlitePool, Row};
 use crate::error::{Result, RegistrarError};
 use crate::types::{UserRegistration, ContactInfo, Transport};
 use crate::storage::Storage;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::UNIX_EPOCH;
 use chrono::{DateTime, Utc};
 
 pub struct SqliteStorage {

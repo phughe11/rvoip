@@ -5,8 +5,7 @@
 
 use crate::Error;
 use super::payloads::{
-    PayloadType, CommonHeader, KeyDataPayload, 
-    GeneralExtensionPayload, KeyValidationData,
+    PayloadType, CommonHeader, KeyDataPayload,
     SecurityPolicyPayload, CertificatePayload, SignaturePayload,
     EncryptedPayload, PublicKeyPayload
 };

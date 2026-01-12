@@ -3,7 +3,7 @@
 //! This module provides a pooled allocator for media packet buffers to minimize
 //! allocations and improve performance under high loads.
 
-use bytes::{Bytes, BytesMut, Buf, BufMut};
+use bytes::{Bytes, BytesMut, Buf};
 use tokio::sync::{Mutex, Semaphore};
 use std::sync::Arc;
 use std::collections::VecDeque;

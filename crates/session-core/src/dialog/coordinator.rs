@@ -4,18 +4,16 @@
 //! handling event bridging and lifecycle management.
 
 use std::sync::Arc;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::mpsc;
 use rvoip_dialog_core::{
     api::unified::UnifiedDialogApi,
     events::SessionCoordinationEvent,
     DialogId,
 };
-use rvoip_sip_core::types::headers::HeaderAccess;
 use crate::api::{
-    types::{SessionId, CallSession, IncomingCall, CallDecision, CallState},
+    types::{SessionId, CallDecision, CallState},
     handlers::CallHandler,
 };
-use crate::session::Session;
 use crate::manager::events::SessionEvent;
 use crate::coordinator::registry::InternalSessionRegistry;
 use crate::coordinator::transfer::TransferHandler;

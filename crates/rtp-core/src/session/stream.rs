@@ -1,12 +1,10 @@
-use bytes::Bytes;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tracing::{debug, warn};
 
-use crate::error::Error;
 use crate::packet::RtpPacket;
-use crate::{Result, RtpSequenceNumber, RtpSsrc, RtpTimestamp};
+use crate::{RtpSequenceNumber, RtpSsrc, RtpTimestamp};
 
 /// Represents an RTP stream with sequence tracking and statistics
 pub struct RtpStream {

@@ -526,11 +526,9 @@
 //! ```
 
 use std::collections::HashMap;
-use chrono::{DateTime, Utc};
 use tracing::{info, debug};
 
-use crate::error::{CallCenterError, Result};
-use rvoip_session_core::api::{SessionId, BridgeId};
+use rvoip_session_core::api::SessionId;
 
 /// Bridge type enumeration for call center operations
 #[derive(Debug, Clone)]

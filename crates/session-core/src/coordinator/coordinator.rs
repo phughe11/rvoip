@@ -3,9 +3,9 @@
 use std::sync::Arc;
 use tokio::sync::{mpsc, RwLock, Mutex};
 use crate::api::{
-    types::{SessionId, SessionStats, MediaInfo, CallSession, CallState},
+    types::{SessionId, CallSession},
     handlers::CallHandler,
-    builder::{SessionManagerConfig, MediaConfig},
+    builder::SessionManagerConfig,
     bridge::BridgeEvent,
 };
 use crate::errors::{Result, SessionError};
@@ -17,7 +17,7 @@ use super::registry::InternalSessionRegistry;
 use crate::dialog::{DialogManager, SessionDialogCoordinator, DialogBuilder};
 use crate::media::{MediaManager, SessionMediaCoordinator};
 use crate::conference::{ConferenceManager};
-use crate::sdp::{SdpNegotiator, NegotiatedMediaConfig, SdpRole};
+use crate::sdp::{SdpNegotiator, NegotiatedMediaConfig};
 use rvoip_dialog_core::events::SessionCoordinationEvent;
 use std::collections::HashMap;
 use std::time::Instant;

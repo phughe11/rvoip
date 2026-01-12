@@ -7,7 +7,6 @@ use std::sync::Arc;
 use std::any::Any;
 use async_trait::async_trait;
 use tokio::net::UdpSocket;
-use tokio::sync::Mutex;
 
 use crate::api::common::error::SecurityError;
 use crate::api::common::config::{SecurityInfo, SecurityMode, SrtpProfile};

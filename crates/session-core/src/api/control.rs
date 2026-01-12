@@ -921,7 +921,7 @@ impl SessionControl for Arc<SessionCoordinator> {
         }
         
         // Create session if it doesn't exist
-        let mut session = if let Ok(Some(existing)) = self.get_session(&call.id).await {
+        let session = if let Ok(Some(existing)) = self.get_session(&call.id).await {
             // Use existing session
             existing
         } else {

@@ -1,11 +1,9 @@
 //! Standard UAC Client - Balance of simplicity and control
 
 use std::sync::Arc;
-use std::time::Duration;
 use std::collections::HashMap;
 use tokio::sync::RwLock;
 use crate::api::control::SessionControl;
-use crate::api::media::MediaControl;
 use crate::api::types::{SessionId, CallState};
 use crate::api::builder::SessionManagerConfig;
 use crate::coordinator::SessionCoordinator;

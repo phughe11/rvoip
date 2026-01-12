@@ -60,12 +60,11 @@
 //! ```
 
 use std::sync::Arc;
-use std::time::Duration;
 
 use crate::transaction::error::Result; // Assuming crate::error::Result is suitable
 use crate::transaction::TransactionKey;
 // Use super::types to access TimerSettings, Timer, TimerType from the same module level.
-use super::types::{Timer, TimerSettings, TimerType};
+use super::types::{TimerSettings, TimerType};
 use super::manager::TimerManager;
 
 

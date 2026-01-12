@@ -5,11 +5,11 @@ use tokio::task::JoinHandle;
 use tracing::{info, warn, error};
 
 use rvoip_media_core::types::conference::{
-    ConferenceMixingConfig, ParticipantId, AudioStream, ConferenceResult, ConferenceMixingStats
+    ConferenceMixingConfig, ParticipantId, AudioStream, ConferenceResult
 };
 use rvoip_media_core::processing::audio::mixer::AudioMixer;
 use rvoip_media_core::integration::RtpBridge;
-use rvoip_media_core::types::{AudioFrame, MediaSessionId};
+use rvoip_media_core::types::MediaSessionId;
 use rvoip_media_core::codec::audio::{G711Codec, AudioCodec};
 
 /// ID for a conference room
@@ -92,10 +92,12 @@ impl ConferenceRoom {
 
         let task = tokio::spawn(async move {
             let mut interval = tokio::time::interval(std::time::Duration::from_millis(20));
+            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
             let mut codec = G711Codec::mu_law(8000, 1).expect("Failed to create codec for mixer");
 
             loop {
                 interval.tick().await;
+                let start = std::time::Instant::now();
                 
                 // 1. Perform mixing
                 // Pass empty slice as inputs are managed internally by AudioStreamManager
@@ -118,6 +120,11 @@ impl ConferenceRoom {
                     Err(e) => {
                         error!("Mixing error in room {}: {:?}", room_id, e);
                     }
+                }
+
+                let elapsed = start.elapsed();
+                if elapsed > std::time::Duration::from_millis(15) {
+                    warn!("Mixing loop took too long in room {}: {:?}", room_id, elapsed);
                 }
             }
         });

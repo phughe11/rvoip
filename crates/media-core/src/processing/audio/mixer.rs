@@ -8,15 +8,13 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::Mutex;
-use crate::types::{AudioFrame, SampleRate};
+use crate::types::AudioFrame;
 use crate::types::conference::{
-    ParticipantId, AudioStream, ConferenceMixingConfig, MixingQuality, 
-    MixedAudioOutput, ConferenceMixingStats, ConferenceError, ConferenceResult,
+    ParticipantId, AudioStream, ConferenceMixingConfig, MixingQuality, ConferenceMixingStats, ConferenceError, ConferenceResult,
     ConferenceMixingEvent
 };
-use crate::processing::audio::{AudioStreamManager, AudioStreamConfig, VoiceActivityDetector, VadConfig};
+use crate::processing::audio::{AudioStreamManager, AudioStreamConfig, VoiceActivityDetector};
 use crate::processing::format::FormatConverter;
-use crate::error::Result;
 
 /// Core audio mixer for multi-party conference calls
 pub struct AudioMixer {

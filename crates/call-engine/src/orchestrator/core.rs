@@ -5,27 +5,23 @@
 //! the central orchestrator for agents, calls, queues, and routing decisions.
 
 use std::sync::Arc;
-use std::collections::HashMap;
 use dashmap::{DashMap, DashSet};
 use tokio::sync::{mpsc, RwLock, Mutex};
 use tracing::{info, error, warn, debug};
 
 use rvoip_session_core::{
     SessionCoordinator, SessionManagerBuilder, SessionId, BridgeEvent, CallState,
-    MediaQualityAlertLevel, MediaFlowDirection, WarningCategory, IncomingCall,
-    SessionControl
+    MediaQualityAlertLevel, MediaFlowDirection, WarningCategory
 };
 use rvoip_session_core::prelude::SessionEvent;
 
 use crate::error::{CallCenterError, Result as CallCenterResult};
 use crate::config::CallCenterConfig;
-use crate::agent::{Agent, AgentId, AgentRegistry, AgentStatus, SipRegistrar};
-use crate::queue::{CallQueue, QueueManager};
-use crate::routing::RoutingEngine;
-use crate::monitoring::MetricsCollector;
+use crate::agent::{AgentId, AgentRegistry, SipRegistrar};
+use crate::queue::QueueManager;
 use crate::database::DatabaseManager;
 
-use super::types::{CallInfo, AgentInfo, RoutingStats, OrchestratorStats, CallStatus, RoutingDecision, CustomerType, BridgeInfo, PendingAssignment};
+use super::types::{CallInfo, RoutingStats, OrchestratorStats, CallStatus, BridgeInfo, PendingAssignment};
 use super::handler::CallCenterCallHandler;
 
 // Imports for Modern Stack

@@ -2,7 +2,6 @@
 
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::mpsc;
 use crate::api::types::{SessionId, CallState, CallSession, IncomingCall, CallDecision};
 use crate::api::control::generate_sdp_answer;
 use crate::errors::{Result, SessionError};
@@ -509,7 +508,7 @@ impl SessionCoordinator {
         tracing::debug!("🧹 COORDINATOR: handle_cleanup_confirmation called for session {} from layer {}", session_id, layer);
         tracing::info!("Cleanup confirmation from {} for session {}", layer, session_id);
         
-        use super::coordinator::CleanupLayer;
+        
         use std::time::Duration;
         
         let mut pending_cleanups = self.pending_cleanups.lock().await;

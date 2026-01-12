@@ -9,7 +9,6 @@ use tokio::sync::Mutex;
 use async_trait::async_trait;
 use bytes::Bytes;
 
-use crate::error::Error;
 use crate::Result;
 use crate::session::RtpSession;
 use crate::traits::MediaTransport;

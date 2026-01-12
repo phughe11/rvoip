@@ -3,12 +3,12 @@
 //! This module handles security context initialization and management.
 
 use std::sync::Arc;
-use tokio::sync::{Mutex, RwLock};
-use tracing::{debug, info, warn};
+use tokio::sync::Mutex;
+use tracing::debug;
 
 use crate::api::common::error::SecurityError;
-use crate::api::common::config::{SecurityInfo, SecurityMode, SrtpProfile};
-use crate::api::server::security::{ServerSecurityContext, ServerSecurityConfig, SocketHandle};
+use crate::api::common::config::{SecurityInfo, SrtpProfile};
+use crate::api::server::security::{ServerSecurityConfig, SocketHandle};
 use crate::dtls::DtlsConnection;
 
 /// Initialize security context if needed

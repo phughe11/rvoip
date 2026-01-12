@@ -2,7 +2,6 @@
 //!
 //! This module provides RTP payload handling for audio streams.
 
-use crate::types::{AudioFrame, AudioFormat};
 use crate::error::AudioError;
 
 /// RTP payload handling for audio

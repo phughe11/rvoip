@@ -4,10 +4,9 @@
 //! event system, providing 900K+ events/sec throughput while maintaining compatibility.
 
 use std::sync::Arc;
-use async_trait::async_trait;
 use rvoip_infra_common::events::{
     api::{EventSystem, EventPublisher, EventSubscriber},
-    types::{Event, EventResult, EventPriority, StaticEvent},
+    types::{Event, EventPriority, StaticEvent},
     system::EventSystem as InfraEventSystem,
     builder::{EventSystemBuilder, ImplementationType},
 };

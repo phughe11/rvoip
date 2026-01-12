@@ -1,5 +1,4 @@
-use bytes::{Bytes, BytesMut, Buf, BufMut};
-use std::sync::Arc;
+use bytes::{Bytes, BytesMut, BufMut};
 use aes::{Aes128, cipher::{KeyIvInit, StreamCipher, generic_array::GenericArray}};
 use ctr::Ctr64BE;
 use hmac::{Hmac, Mac};
@@ -206,7 +205,7 @@ impl SrtpCrypto {
         
         // Extract header and payload
         let header = packet.header.clone();
-        let mut payload = packet.payload.clone();
+        let payload = packet.payload.clone();
         
         // Create an IV for encryption
         let ssrc = packet.header.ssrc;

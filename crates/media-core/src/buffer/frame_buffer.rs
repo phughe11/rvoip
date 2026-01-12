@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use tokio::sync::RwLock;
 use tracing::{debug, trace};
 
-use crate::error::{Result, BufferError};
+use crate::error::Result;
 use crate::types::AudioFrame;
 
 /// Configuration for frame buffer

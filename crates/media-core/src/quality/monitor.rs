@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
-use tracing::{debug, warn, trace};
+use tracing::{debug, warn};
 
 use crate::error::Result;
 use crate::types::{MediaSessionId, MediaPacket};

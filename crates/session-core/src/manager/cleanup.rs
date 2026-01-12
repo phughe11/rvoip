@@ -5,7 +5,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
-use tokio::time::{interval, Instant};
+use tokio::time::interval;
 use crate::api::types::SessionId;
 use crate::errors::Result;
 

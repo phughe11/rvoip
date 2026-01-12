@@ -412,7 +412,6 @@ use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
 
 use crate::api::types::{IncomingCall, CallSession, CallDecision, SessionId, CallState};
-use crate::errors::Result;
 use crate::manager::events::{MediaQualityAlertLevel, MediaFlowDirection, WarningCategory};
 
 /// Main trait for handling call events

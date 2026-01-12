@@ -3,7 +3,7 @@
 //! This module implements the G.729 codec, a low bit-rate audio codec
 //! standardized by ITU-T, commonly used in VoIP for its excellent compression.
 
-use tracing::{debug, warn, error};
+use tracing::{debug, warn};
 use crate::error::{Result, CodecError};
 use crate::types::{AudioFrame, SampleRate};
 use super::common::{AudioCodec, CodecInfo};

@@ -4,7 +4,6 @@
 //! templates for creating in-dialog requests and helper functions.
 
 use std::str::FromStr;
-use std::net::SocketAddr;
 use uuid::Uuid;
 
 use rvoip_sip_core::prelude::*;

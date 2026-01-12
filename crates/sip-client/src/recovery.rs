@@ -6,7 +6,6 @@
 use crate::{
     error::{SipClientError, SipClientResult},
     events::{SipClientEvent, EventEmitter},
-    types::{CallId, CallState},
 };
 use std::{
     sync::Arc,

@@ -562,7 +562,7 @@ use rvoip_session_core::{
 use std::time::Instant;
 
 use super::core::CallCenterEngine;
-use super::types::{AgentInfo, CallStatus};
+use super::types::CallStatus;
 use crate::agent::AgentStatus;
 use crate::error::CallCenterError;
 
@@ -696,13 +696,13 @@ impl CallHandler for CallCenterCallHandler {
                 info!("🔔 Agent {} answered for pending assignment", pending_assignment.agent_id);
                 
                 // This is an agent answering - complete the bridge
-                let coordinator = engine.session_coordinator.as_ref().unwrap();
-                let bridge_start = Instant::now();
-                
-                match coordinator.bridge_sessions(
-                    &pending_assignment.customer_session_id, 
-                    &pending_assignment.agent_session_id
-                ).await {
+                if let Some(coordinator) = &engine.session_coordinator {
+                    let bridge_start = Instant::now();
+                    
+                    match coordinator.bridge_sessions(
+                        &pending_assignment.customer_session_id, 
+                        &pending_assignment.agent_session_id
+                    ).await {
                     Ok(bridge_id) => {
                         let bridge_time = bridge_start.elapsed().as_millis();
                         info!("✅ Successfully bridged customer {} with agent {} (bridge: {}) in {}ms", 
@@ -739,6 +739,9 @@ impl CallHandler for CallCenterCallHandler {
                             let _ = db_manager.update_agent_status(&pending_assignment.agent_id.0, AgentStatus::Available).await;
                         }
                     }
+                }
+                } else {
+                    warn!("Session coordinator missing, cannot bridge sessions for pending assignment");
                 }
             } else {
                 // Regular call established (not a pending assignment)

@@ -8,7 +8,6 @@ use tokio::sync::Mutex;
 use tracing::{debug, error, warn};
 
 use crate::api::common::error::SecurityError;
-use crate::api::server::security::{ClientSecurityContext, SocketHandle};
 use crate::dtls::{DtlsConnection, handshake::HandshakeStep};
 use crate::srtp::{SrtpContext};
 use crate::api::server::security::srtp::keys;

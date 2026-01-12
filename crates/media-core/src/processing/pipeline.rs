@@ -7,7 +7,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
-use crate::error::{Result, AudioProcessingError};
+use crate::error::Result;
 use crate::types::{AudioFrame, SampleRate};
 use super::audio::{AudioProcessor, AudioProcessingConfig, AudioProcessingResult};
 use super::format::{FormatConverter, ConversionParams};

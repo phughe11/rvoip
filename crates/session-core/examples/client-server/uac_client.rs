@@ -7,7 +7,7 @@ use anyhow::Result;
 use clap::Parser;
 use rvoip_session_core::api::*;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use tokio::signal;
 use tokio::sync::Mutex;
 use tracing::{info, error, warn};

@@ -114,7 +114,7 @@ impl DialogBuilder {
         self.config_converter.validate_compatibility()?;
         
         // Create dialog configuration
-        let mut dialog_config = self.create_dialog_config().await?;
+        let dialog_config = self.create_dialog_config().await?;
         
         // Set custom timeouts
         // Note: This assumes DialogManagerConfig has timeout setters

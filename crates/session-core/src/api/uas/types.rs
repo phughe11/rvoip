@@ -1,9 +1,6 @@
 //! UAS-specific types
 
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use crate::api::types::{SessionId, CallState, IncomingCall, CallSession};
-use crate::errors::Result;
+use crate::api::types::{SessionId, CallState, CallSession};
 
 /// UAS configuration
 #[derive(Debug, Clone)]

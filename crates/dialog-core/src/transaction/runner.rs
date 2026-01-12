@@ -36,14 +36,12 @@
 use std::sync::Arc;
 use std::env;
 use tokio::sync::mpsc;
-use tokio::task::JoinHandle;
 use tracing::{debug, error, trace, warn};
 
-use rvoip_sip_core::Message; // Assuming common Message type
-use rvoip_sip_core::types::method::Method; // Import Method for method comparison
-use crate::transaction::error::{Error, Result};
+ // Assuming common Message type
+ // Import Method for method comparison
 use crate::transaction::{
-    TransactionState, TransactionKind, TransactionKey, TransactionEvent,
+    TransactionState, TransactionKey, TransactionEvent,
     InternalTransactionCommand, AtomicTransactionState,
 };
 use crate::transaction::state::TransactionLifecycle;
