@@ -383,7 +383,7 @@ impl DialogManager {
                 warn!("Failed to publish session coordination event to global bus: {}", e);
             } else {
                 info!("📤 Published session coordination event to global bus: {:?}", event);
-                return;
+                // removing return; to allow legacy channel to also receive event for hybrid operation
             }
         } else {
             info!("📤 Event hub is None, trying legacy channel");

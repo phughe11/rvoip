@@ -297,7 +297,7 @@ impl CallCenterEngine {
             info!("✅ TransportManager listening on {}", config.general.local_signaling_addr);
                 
             // 2. Create Transaction Manager
-            let (transaction_manager, _tx_events): (TransactionManager, mpsc::Receiver<TransactionEvent>) = 
+            let (transaction_manager, tx_events): (TransactionManager, mpsc::Receiver<TransactionEvent>) = 
                 TransactionManager::new_with_config(
                     default_transport,
                     transport_result.1,
@@ -307,7 +307,7 @@ impl CallCenterEngine {
                 .map_err(|e| CallCenterError::orchestration(&format!("Failed to create TransactionManager: {}", e)))?;
             
              // 3. Create B2BUA Engine
-            let b2bua = B2buaEngine::new(Arc::new(transaction_manager), config.general.local_signaling_addr.port()).await
+            let b2bua = B2buaEngine::new(Arc::new(transaction_manager), tx_events, config.general.local_signaling_addr.port()).await
                 .map_err(|e| CallCenterError::orchestration(&format!("Failed to create B2buaEngine: {}", e)))?;
                 
             info!("✅ B2buaEngine (Modern) initialized and ready.");
@@ -614,12 +614,11 @@ impl CallCenterEngine {
                 }
             });
             info!("✅ Event monitoring started (Legacy Session Core)");
-            
-        } else if let Some(b2bua) = &self.b2bua_engine {
+                    } else if let Some(b2bua) = &self.b2bua_engine {
              // MODERN: Use B2BUA event coordinator
              let coordinator = b2bua.event_coordinator();
              
-             // Subscribe to "dialog_to_session" events
+             // 1. Subscribe to "dialog_to_session" events (Existing)
              match coordinator.subscribe("dialog_to_session").await {
                  Ok(mut rx) => {
                     let _engine = self.clone(); // Capture for task
@@ -631,12 +630,51 @@ impl CallCenterEngine {
                              }
                         }
                     });
-                    info!("✅ Event monitoring started (Modern B2BUA)");
+                    info!("✅ Event monitoring started (Modern B2BUA - Call Events)");
                  }
                  Err(e) => {
                      error!("Failed to subscribe to B2BUA events: {}", e);
                      return Err(CallCenterError::orchestration(&format!("Failed to subscribe to B2BUA events: {}", e)));
                  }
+             }
+
+             // 2. Subscribe to Session Coordination Events (Registration!)
+             // We need to catch REGISTER requests handled by UnifiedDialogManager
+             let (tx, mut rx) = mpsc::channel(100);
+             if let Err(e) = b2bua.dialog_manager().set_session_coordinator(tx).await {
+                 warn!("Failed to set session coordinator on B2BUA: {}", e);
+             } else {
+                 let engine = self.clone();
+                 tokio::spawn(async move {
+                     while let Some(event) = rx.recv().await {
+                         // Bridge SessionCoordinationEvent -> SessionEvent
+                         // We are specifically looking for RegistrationRequest
+                         use rvoip_dialog_core::events::SessionCoordinationEvent;
+                         use rvoip_session_core::prelude::SessionEvent;
+
+                         match event {
+                             SessionCoordinationEvent::RegistrationRequest { 
+                                 transaction_id, from_uri, contact_uri, expires 
+                             } => {
+                                 info!("Bridging REGISTER event to CallCenter: {}", from_uri);
+                                 let session_event = SessionEvent::RegistrationRequest {
+                                     transaction_id: transaction_id.to_string(), // Convert Key to String
+                                     from_uri: from_uri.to_string(),             // Convert Uri to String
+                                     contact_uri: contact_uri.to_string(),       // Convert Uri to String
+                                     expires
+                                 };
+                                 if let Err(e) = engine.handle_session_event(session_event).await {
+                                     error!("Failed to handle bridged Registration event: {}", e);
+                                 }
+                             },
+                             _ => {
+                                 // Ignoring other coordination events for now
+                                 // (IncomingCalls are handled by B2buaEngine directly via invite handler)
+                             }
+                         }
+                     }
+                 });
+                 info!("✅ Event monitoring started (Modern B2BUA - Registration Events)");
              }
         } else {
              warn!("⚠️ No active session coordinator or B2BUA engine found. Event monitoring disabled.");
@@ -650,6 +688,7 @@ impl CallCenterEngine {
     /// Internal method that processes various session events and routes them
     /// to appropriate handlers within the call center.
     async fn handle_session_event(&self, event: SessionEvent) -> CallCenterResult<()> {
+        info!("▶️ handle_session_event called with event variant");
         match event {
             SessionEvent::RegistrationRequest { transaction_id, from_uri, contact_uri, expires } => {
                 info!("Received REGISTER request: {} -> {} (expires: {})", from_uri, contact_uri, expires);

@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  rvoip:
+    build: .
+    image: rvoip:latest
+    container_name: rvoip_server
+    
+    # ⚠️ IMPORTANT for VoIP:
+    # Use "host" networking mode to avoid NAT issues with RTP ports.
+    # If you cannot use host mode, you must explicitly map the full RTP range (e.g., 10000-20000/udp).
+    network_mode: "host"
+    
+    environment:
+      - RUST_LOG=info
+      - DATABASE_URL=sqlite:/app/data/rvoip.db
+      - RVOIP_DOMAIN=localhost
+      
+    volumes:
+      - ./data:/app/data
+      - ./certs:/app/certs
+      
+    restart: unless-stopped
+    
+    # Resource limits (optional but recommended)
+    deploy:
+      resources:
+        limits:
+          memory: 1G
