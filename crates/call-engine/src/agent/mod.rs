@@ -122,60 +122,15 @@
 //! # }
 //! ```
 
+pub mod types;
 pub mod registry;
 pub mod routing;
 pub mod availability;
 pub mod registration;
 
-use std::fmt;
-use serde::{Deserialize, Serialize};
-
-/// Agent identifier type for strongly-typed agent references
-///
-/// This wrapper type provides type safety for agent identifiers throughout
-/// the call center system, preventing confusion between agent IDs and other
-/// string identifiers.
-///
-/// # Examples
-///
-/// ```
-/// use rvoip_call_engine::agent::AgentId;
-/// 
-/// let agent_id = AgentId::from("agent-001");
-/// println!("Agent ID: {}", agent_id);
-/// 
-/// // Convert from string references
-/// let agent_id2 = AgentId::from("agent-002");
-/// assert_ne!(agent_id, agent_id2);
-/// ```
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct AgentId(pub String);
-
-impl From<String> for AgentId {
-    fn from(s: String) -> Self {
-        AgentId(s)
-    }
-}
-
-impl From<&str> for AgentId {
-    fn from(s: &str) -> Self {
-        AgentId(s.to_string())
-    }
-}
-
-impl fmt::Display for AgentId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl AsRef<str> for AgentId {
-    fn as_ref(&self) -> &str {
-        &self.0
-    }
-}
-
-pub use registry::{AgentRegistry, Agent, AgentStatus, AgentStats};
+pub use types::{AgentId, Agent, AgentStatus};
+pub use registry::{AgentRegistry, AgentStats};
 pub use routing::SkillBasedRouter;
 pub use availability::AvailabilityTracker;
-pub use registration::{SipRegistrar, Registration, RegistrationResponse, RegistrationStatus}; 
+pub use registration::{SipRegistrar, Registration, RegistrationResponse, RegistrationStatus};
+ 

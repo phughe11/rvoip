@@ -269,9 +269,11 @@
 
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
-use tracing::{info, warn};
+use tracing::{info, warn, error};
+use chrono::Utc;
 
 use crate::error::Result;
+use crate::database::DatabaseManager;
 
 /// Default registration expiry time (1 hour)
 const DEFAULT_EXPIRY: Duration = Duration::from_secs(3600);
@@ -328,6 +330,9 @@ pub struct SipRegistrar {
     
     /// Reverse lookup: contact URI -> AOR
     contact_to_aor: HashMap<String, String>,
+    
+    /// Optional persistent storage
+    db: Option<DatabaseManager>,
 }
 
 impl SipRegistrar {
@@ -349,7 +354,51 @@ impl SipRegistrar {
         Self {
             registrations: HashMap::new(),
             contact_to_aor: HashMap::new(),
+            db: None,
         }
+    }
+    
+    /// Create a new SIP registrar with persistent storage
+    pub fn with_db(mut self, db: DatabaseManager) -> Self {
+        self.db = Some(db);
+        self
+    }
+    
+    /// Initialize registrar from database (load stored registrations)
+    pub async fn load_from_db(&mut self) -> Result<()> {
+        if let Some(db) = &self.db {
+            let stored_regs = db.get_all_registrations().await?;
+            let now = Instant::now();
+            let utc_now = Utc::now();
+            
+            info!("📥 Loading {} registrations from database...", stored_regs.len());
+            
+            for db_reg in stored_regs {
+                // Calculate remaining duration
+                let remaining = if db_reg.expires_at > utc_now {
+                    (db_reg.expires_at - utc_now).to_std().unwrap_or(Duration::from_secs(0))
+                } else {
+                    Duration::from_secs(0)
+                };
+                
+                if remaining.is_zero() {
+                    continue; // Skip expired
+                }
+                
+                let reg = Registration {
+                    agent_id: db_reg.aor.clone(),
+                    contact_uri: db_reg.contact_uri.clone(),
+                    expires_at: now + remaining,
+                    user_agent: db_reg.user_agent,
+                    transport: db_reg.transport,
+                    remote_addr: db_reg.remote_addr,
+                };
+                
+                self.contact_to_aor.insert(reg.contact_uri.clone(), db_reg.aor.clone());
+                self.registrations.insert(db_reg.aor, reg);
+            }
+        }
+        Ok(())
     }
     
     /// Process a REGISTER request with simplified string-based interface
@@ -410,7 +459,7 @@ impl SipRegistrar {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn process_register_simple(
+    pub async fn process_register_simple(
         &mut self,
         aor: &str,  // Address of Record (e.g., "sip:alice@example.com")
         contact_uri: &str,  // Contact URI as string
@@ -425,7 +474,7 @@ impl SipRegistrar {
         // Handle de-registration (expires=0)
         if expires_duration.is_zero() {
             info!("📤 De-registration request for {}", aor);
-            self.remove_registration(aor);
+            self.remove_registration(aor).await;
             return Ok(RegistrationResponse {
                 status: RegistrationStatus::Removed,
                 expires: 0,
@@ -458,12 +507,28 @@ impl SipRegistrar {
             agent_id: aor.to_string(), // Could be parsed from AOR
             contact_uri: contact_uri.to_string(),
             expires_at: Instant::now() + expires_duration,
-            user_agent,
-            transport,
-            remote_addr,
+            user_agent: user_agent.clone(),
+            transport: transport.clone(),
+            remote_addr: remote_addr.clone(),
         };
         
-        // Store registration
+        // Persist to DB if available
+        if let Some(db) = &self.db {
+            let expires_at_utc = Utc::now() + chrono::Duration::from_std(expires_duration).unwrap_or(chrono::Duration::seconds(3600));
+            if let Err(e) = db.upsert_registration(
+                aor, 
+                contact_uri, 
+                expires_at_utc, 
+                user_agent.as_deref(), 
+                &transport, 
+                &remote_addr
+            ).await {
+                error!("Failed to persist registration for {}: {}", aor, e);
+                // Continue with memory update even if DB fails, but log error
+            }
+        }
+        
+        // Store registration in memory
         let is_refresh = self.registrations.contains_key(aor);
         self.registrations.insert(aor.to_string(), registration);
         self.contact_to_aor.insert(contact_uri.to_string(), aor.to_string());
@@ -508,7 +573,14 @@ impl SipRegistrar {
     /// registrar.remove_registration("sip:test@example.com");
     /// assert!(registrar.get_registration("sip:test@example.com").is_none());
     /// ```
-    pub fn remove_registration(&mut self, aor: &str) {
+    pub async fn remove_registration(&mut self, aor: &str) {
+        // Remove from DB first
+        if let Some(db) = &self.db {
+            if let Err(e) = db.remove_registration(aor).await {
+                error!("Failed to remove registration from DB for {}: {}", aor, e);
+            }
+        }
+        
         if let Some(reg) = self.registrations.remove(aor) {
             self.contact_to_aor.remove(&reg.contact_uri);
             info!("🗑️ Removed registration for {}", aor);
@@ -617,8 +689,16 @@ impl SipRegistrar {
     /// 
     /// println!("Expired registrations cleaned up");
     /// ```
-    pub fn cleanup_expired(&mut self) {
+    pub async fn cleanup_expired(&mut self) {
         let now = Instant::now();
+        
+        // Cleanup DB
+        if let Some(db) = &self.db {
+            if let Err(e) = db.cleanup_expired_registrations(Utc::now()).await {
+                error!("Failed to cleanup expired registrations in DB: {}", e);
+            }
+        }
+        
         let expired: Vec<String> = self.registrations
             .iter()
             .filter(|(_, reg)| reg.expires_at <= now)
@@ -626,7 +706,7 @@ impl SipRegistrar {
             .collect();
         
         for aor in expired {
-            self.remove_registration(&aor);
+            self.remove_registration(&aor).await;
             warn!("⏰ Expired registration removed: {}", aor);
         }
     }
@@ -694,8 +774,8 @@ pub enum RegistrationStatus {
 mod tests {
     use super::*;
     
-    #[test]
-    fn test_basic_registration() {
+    #[tokio::test]
+    async fn test_basic_registration() {
         let mut registrar = SipRegistrar::new();
         
         // Process registration with simplified interface
@@ -705,7 +785,7 @@ mod tests {
             Some(3600),
             Some("MySoftphone/1.0".to_string()),
             "192.168.1.100:5060".to_string(),
-        ).unwrap();
+        ).await.unwrap();
         
         assert!(matches!(response.status, RegistrationStatus::Created));
         assert_eq!(response.expires, 3600);

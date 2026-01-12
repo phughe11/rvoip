@@ -506,30 +506,9 @@ impl AdminApi {
     /// # }
     /// ```
     pub async fn add_agent(&self, agent: Agent) -> Result<(), CallCenterError> {
-        // Register with the registry
+        // Register with the registry (handles both memory and DB)
         let mut registry = self.engine.agent_registry.lock().await;
-        registry.register_agent(agent.clone()).await?;
-        
-        // Also add to database if available
-        if let Some(db) = self.engine.database_manager() {
-            // Extract username from SIP URI (e.g., "alice" from "sip:alice@127.0.0.1")
-            let username = agent.sip_uri
-                .trim_start_matches("sip:")
-                .split('@')
-                .next()
-                .unwrap_or(&agent.id);
-            
-            db.upsert_agent(
-                &agent.id,
-                username,  // Use the SIP username, not display_name
-                Some(&agent.sip_uri)
-            ).await.map_err(|e| CallCenterError::database(&format!("Failed to upsert agent: {}", e)))?;
-            
-            // Update status separately
-            db.update_agent_status(&agent.id, agent.status.clone())
-                .await.map_err(|e| CallCenterError::database(&format!("Failed to update status: {}", e)))?;
-        }
-        
+        registry.register_agent(agent).await?;
         Ok(())
     }
     
@@ -564,13 +543,7 @@ impl AdminApi {
     pub async fn remove_agent(&self, agent_id: &AgentId) -> Result<(), CallCenterError> {
         // Remove from registry
         let mut registry = self.engine.agent_registry.lock().await;
-        registry.remove_agent_session(&agent_id.0)?;
-        
-        // Also mark as offline in database if available
-        if let Some(db) = self.engine.database_manager() {
-            db.mark_agent_offline(&agent_id.0)
-                .await.map_err(|e| CallCenterError::database(&format!("Failed to mark agent offline: {}", e)))?;
-        }
+        registry.remove_agent_session(&agent_id.0).await?;
         
         Ok(())
     }
@@ -586,7 +559,7 @@ impl AdminApi {
             let agents = db_agents.into_iter().map(|db_agent| {
                 Agent {
                     id: db_agent.agent_id,
-                    sip_uri: db_agent.contact_uri.unwrap_or_else(|| format!("sip:{}@localhost", db_agent.username)),
+                    sip_uri: db_agent.contact_uri.unwrap_or_else(|| self.engine.config().general.agent_sip_uri(&db_agent.username)),
                     display_name: db_agent.username,
                     skills: vec![], // TODO: Load from database when skill table is implemented
                     max_concurrent_calls: db_agent.max_calls as u32,

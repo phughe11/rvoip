@@ -261,6 +261,32 @@ pub struct DbCallRecord {
     pub notes: Option<String>,
 }
 
+/// Registration record from database
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct DbRegistration {
+    pub aor: String,
+    pub contact_uri: String,
+    pub expires_at: DateTime<Utc>,
+    pub user_agent: Option<String>,
+    pub transport: String,
+    pub remote_addr: String,
+    pub last_updated: DateTime<Utc>,
+}
+
+impl DbRegistration {
+    pub fn to_registration(&self) -> crate::agent::registration::Registration {
+        crate::agent::registration::Registration {
+            agent_id: self.aor.clone(),
+            contact_uri: self.contact_uri.clone(),
+            expires_at: std::time::Instant::now() + 
+                (self.expires_at - Utc::now()).to_std().unwrap_or(std::time::Duration::from_secs(0)),
+            user_agent: self.user_agent.clone(),
+            transport: self.transport.clone(),
+            remote_addr: self.remote_addr.clone(),
+        }
+    }
+}
+
 /// Agent statistics
 #[derive(Debug, Clone)]
 pub struct AgentStats {
@@ -685,6 +711,103 @@ impl DatabaseManager {
     }
 }
 
+// Registration operations implementation
+impl DatabaseManager {
+    /// Upsert a registration
+    pub async fn upsert_registration(
+        &self, 
+        aor: &str,
+        contact_uri: &str,
+        expires_at: DateTime<Utc>,
+        user_agent: Option<&str>,
+        transport: &str,
+        remote_addr: &str
+    ) -> Result<()> {
+        sqlx::query(
+            "INSERT INTO registrations (aor, contact_uri, expires_at, user_agent, transport, remote_addr, last_updated)
+             VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+             ON CONFLICT(aor) DO UPDATE SET
+                contact_uri = excluded.contact_uri,
+                expires_at = excluded.expires_at,
+                user_agent = excluded.user_agent,
+                transport = excluded.transport,
+                remote_addr = excluded.remote_addr,
+                last_updated = datetime('now')"
+        )
+        .bind(aor)
+        .bind(contact_uri)
+        .bind(expires_at)
+        .bind(user_agent)
+        .bind(transport)
+        .bind(remote_addr)
+        .execute(&self.pool)
+        .await?;
+        
+        debug!("Registration upserted for {}", aor);
+        Ok(())
+    }
+    
+    /// Get registration by AOR
+    pub async fn get_registration(&self, aor: &str) -> Result<Option<DbRegistration>> {
+        let row = sqlx::query_as::<_, DbRegistration>(
+            "SELECT * FROM registrations WHERE aor = ? AND expires_at > datetime('now')"
+        )
+        .bind(aor)
+        .fetch_optional(&self.pool)
+        .await?;
+        
+        Ok(row)
+    }
+    
+    /// Remove registration
+    pub async fn remove_registration(&self, aor: &str) -> Result<()> {
+        sqlx::query("DELETE FROM registrations WHERE aor = ?")
+            .bind(aor)
+            .execute(&self.pool)
+            .await?;
+            
+        debug!("Registration removed for {}", aor);
+        Ok(())
+    }
+    
+    /// Cleanup expired registrations
+    pub async fn cleanup_expired_registrations(&self, now: DateTime<Utc>) -> Result<u64> {
+        let result = sqlx::query("DELETE FROM registrations WHERE expires_at <= ?")
+            .bind(now)
+            .execute(&self.pool)
+            .await?;
+            
+        let deleted = result.rows_affected();
+        if deleted > 0 {
+            info!("Cleaned up {} expired registrations", deleted);
+        }
+        Ok(deleted)
+    }
+    
+    /// Get all active registrations
+    pub async fn get_all_registrations(&self) -> Result<Vec<DbRegistration>> {
+        let regs = sqlx::query_as::<_, DbRegistration>(
+            "SELECT * FROM registrations WHERE expires_at > datetime('now')"
+        )
+        .fetch_all(&self.pool)
+        .await?;
+        
+        Ok(regs)
+    }
+    
+    /// Find AOR by contact URI
+    pub async fn find_aor_by_contact(&self, contact_uri: &str) -> Result<Option<String>> {
+        let row = sqlx::query(
+            "SELECT aor FROM registrations WHERE contact_uri = ? AND expires_at > datetime('now')"
+        )
+        .bind(contact_uri)
+        .fetch_optional(&self.pool)
+        .await?;
+        
+        Ok(row.map(|r| r.get("aor")))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -730,4 +853,51 @@ mod tests {
         let agents = db.get_available_agents().await.unwrap();
         assert!(agents.is_empty());
     }
-} 
+    #[tokio::test]
+    async fn test_registration_operations() {
+        let db = DatabaseManager::new_in_memory().await.unwrap();
+        let now = Utc::now();
+        let expires_at = now + chrono::Duration::hours(1);
+        
+        // Upsert registration
+        db.upsert_registration(
+            "sip:alice@example.com",
+            "sip:alice@192.168.1.100:5060",
+            expires_at,
+            Some("TestUA/1.0"),
+            "udp",
+            "192.168.1.100:5060"
+        ).await.unwrap();
+        
+        // Get registration
+        let reg = db.get_registration("sip:alice@example.com").await.unwrap();
+        assert!(reg.is_some());
+        let reg = reg.unwrap();
+        assert_eq!(reg.contact_uri, "sip:alice@192.168.1.100:5060");
+        assert_eq!(reg.transport, "udp");
+        
+        // Get all
+        let all = db.get_all_registrations().await.unwrap();
+        assert_eq!(all.len(), 1);
+        
+        // Remove
+        db.remove_registration("sip:alice@example.com").await.unwrap();
+        let reg = db.get_registration("sip:alice@example.com").await.unwrap();
+        assert!(reg.is_none());
+        
+        // Cleanup
+        db.upsert_registration(
+            "sip:bob@example.com",
+            "sip:bob@192.168.1.101:5060",
+            now - chrono::Duration::hours(1), // Expired
+            None,
+            "tcp",
+            "192.168.1.101:5060"
+        ).await.unwrap();
+        
+        let deleted = db.cleanup_expired_registrations(now).await.unwrap();
+        assert_eq!(deleted, 1);
+        let all = db.get_all_registrations().await.unwrap();
+        assert!(all.is_empty());
+    }
+}

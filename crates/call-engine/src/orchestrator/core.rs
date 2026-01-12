@@ -317,6 +317,21 @@ impl CallCenterEngine {
         } else {
              // LEGACY PATH (Existing Code)
              
+            // Create SipRegistrar with DB support
+            let mut registrar = SipRegistrar::new();
+            if let Some(db) = &db_manager {
+                registrar = registrar.with_db(db.as_ref().clone());
+                // Note: We can't await here easily in this block structure for the legacy path
+                // without complicating the variable initialization. 
+                // Since this is legacy path, we might skip loading or do it after.
+            }
+
+            // Create AgentRegistry with DB support for legacy placeholder
+            let mut agent_registry = AgentRegistry::new();
+            if let Some(db) = &db_manager {
+                agent_registry = agent_registry.with_db(db.as_ref().clone());
+            }
+
             // First, create a placeholder engine that will be updated
             let placeholder_engine = Arc::new(Self {
                 config: config.clone(),
@@ -328,8 +343,8 @@ impl CallCenterEngine {
                 bridge_events: None,
                 active_calls: Arc::new(DashMap::new()),
                 routing_stats: Arc::new(RwLock::new(RoutingStats::default())),
-                agent_registry: Arc::new(Mutex::new(AgentRegistry::new())),
-                sip_registrar: Arc::new(Mutex::new(SipRegistrar::new())),
+                agent_registry: Arc::new(Mutex::new(agent_registry)),
+                sip_registrar: Arc::new(Mutex::new(registrar)),
                 active_queue_monitors: Arc::new(DashSet::new()),
                 session_to_dialog: Arc::new(DashMap::new()),
                 pending_assignments: Arc::new(DashMap::new()),
@@ -345,7 +360,7 @@ impl CallCenterEngine {
             
             // Create session coordinator with our CallHandler
             // CRITICAL: Configure both SIP address and media bind address to use the configured IP
-            let sip_uri = format!("sip:call-center@{}", config.general.local_ip);
+            let sip_uri = config.general.call_center_uri();
             let session_coordinator = SessionManagerBuilder::new()
                 .with_sip_port(config.general.local_signaling_addr.port())
                 .with_local_address(sip_uri)  // Use configured IP for SIP URIs
@@ -366,6 +381,21 @@ impl CallCenterEngine {
             (Some(session_coordinator), None)
         };
 
+        // Create SipRegistrar and AgentRegistry with DB support for final engine
+        let mut registrar = SipRegistrar::new();
+        let mut agent_registry = AgentRegistry::new();
+        if let Some(db) = &db_manager {
+            registrar = registrar.with_db(db.as_ref().clone());
+            agent_registry = agent_registry.with_db(db.as_ref().clone());
+            
+            if let Err(e) = registrar.load_from_db().await {
+                warn!("Failed to load registrations from DB: {}", e);
+            }
+            if let Err(e) = agent_registry.load_from_db().await {
+                warn!("Failed to load agent states from DB: {}", e);
+            }
+        }
+
         let engine = Arc::new(Self {
             config,
             db_manager,
@@ -376,8 +406,8 @@ impl CallCenterEngine {
             bridge_events: None,
             active_calls: Arc::new(DashMap::new()),
             routing_stats: Arc::new(RwLock::new(RoutingStats::default())),
-            agent_registry: Arc::new(Mutex::new(AgentRegistry::new())),
-            sip_registrar: Arc::new(Mutex::new(SipRegistrar::new())),
+            agent_registry: Arc::new(Mutex::new(agent_registry)),
+            sip_registrar: Arc::new(Mutex::new(registrar)),
             active_queue_monitors: Arc::new(DashSet::new()),
             session_to_dialog: Arc::new(DashMap::new()),
             pending_assignments: Arc::new(DashMap::new()),

@@ -757,22 +757,29 @@ impl CallCenterEngine {
     
     /// Get list of available agents (excludes agents in post-call wrap-up)
     async fn get_available_agents(&self) -> Vec<AgentId> {
-        let mut agents = if let Some(db_manager) = &self.db_manager {
-            match db_manager.get_available_agents().await {
-                Ok(agents) => agents
-                    .into_iter()
-                    .map(|agent| AgentId::from(agent.agent_id))
-                    .collect::<Vec<_>>(),
-                Err(e) => {
-                    error!("Failed to get available agents from database: {}", e);
-                    vec![]
+        // Use the AgentRegistry which provides high-performance memory-speed access
+        // with database synchronization
+        let registry = self.agent_registry.lock().await;
+        let mut agents = registry.get_available_agents();
+        
+        if agents.is_empty() {
+            // Fallback to database if memory registry is empty (might happen during early startup)
+            if let Some(db_manager) = &self.db_manager {
+                match db_manager.get_available_agents().await {
+                    Ok(db_agents) => {
+                        agents = db_agents
+                            .into_iter()
+                            .map(|agent| AgentId::from(agent.agent_id))
+                            .collect::<Vec<_>>();
+                    }
+                    Err(e) => {
+                        error!("Failed to get available agents from database: {}", e);
+                    }
                 }
             }
-        } else {
-            vec![]
-        };
+        }
         
-        // Fallback to memory
+        // Final fallback to memory SIP registrations if everything else fails
         if agents.is_empty() {
             agents = self.sip_registrar.lock().await.list_registrations()
                 .into_iter()

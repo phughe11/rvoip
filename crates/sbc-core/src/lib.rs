@@ -15,11 +15,12 @@
 
 use anyhow::Result;
 use tracing::{info, debug};
-use rvoip_sip_core::{Request, HeaderName};
+use rvoip_sip_core::{Request, HeaderName, Via, Contact, Host, TypedHeader, TypedHeaderTrait};
+use std::str::FromStr;
 use std::net::IpAddr;
 
 mod rate_limit;
-// pub mod nat;
+pub mod nat;
 use rate_limit::RateLimiter;
 
 #[cfg(feature = "b2bua")]
@@ -90,17 +91,32 @@ impl SbcEngine {
         let public_ip = self.config.public_ip.map(|ip| ip.to_string()).unwrap_or_else(|| "192.0.2.1".to_string());
         
         // Rewrite Via header (topmost)
-        if let Some(_via) = request.headers.iter_mut().find(|h| h.name() == HeaderName::Via) {
-            debug!("SBC: Rewriting Via header for topology hiding to {}", public_ip);
-            // This is a simplified rewrite. Real implementation would parse, replace host, and re-serialize.
-            // For now, we assume standard "SIP/2.0/UDP <host>:<port>;..." format
-            // TODO: Use sip-core's typed Via header manipulation when available
+        if let Some(h) = request.headers.iter_mut().find(|h| h.name() == HeaderName::Via) {
+            if let TypedHeader::Via(via) = h {
+                // Modify the first (topmost) Via entry to hide the upstream source
+                if let Some(via_header) = via.0.first_mut() {
+                    debug!("SBC: Rewriting Via host from {} to {}", via_header.sent_by_host, public_ip);
+                    if let Ok(host) = Host::from_str(&public_ip) {
+                        via_header.sent_by_host = host;
+                        via_header.sent_by_port = Some(5060); // Standardize port
+                    }
+                }
+            }
         }
 
         // Rewrite Contact header
-        if let Some(_contact) = request.headers.iter_mut().find(|h| h.name() == HeaderName::Contact) {
-             debug!("SBC: Rewriting Contact header for topology hiding to {}", public_ip);
-             // TODO: Use sip-core's typed Contact header manipulation
+        if let Some(h) = request.headers.iter_mut().find(|h| h.name() == HeaderName::Contact) {
+            if let TypedHeader::Contact(contact) = h {
+                 // Rewrite all contact addresses to point to SBC
+                 for address in contact.addresses_mut() {
+                     debug!("SBC: Rewriting Contact URI from {} to {}", address.uri, public_ip);
+                     if let Ok(host) = Host::from_str(&public_ip) {
+                        address.uri.host = host;
+                        address.uri.port = Some(5060);
+                     }
+                 }
+                 
+             }
         }
     }
     

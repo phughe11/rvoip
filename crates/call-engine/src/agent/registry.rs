@@ -318,12 +318,13 @@
 //! ```
 
 use std::collections::HashMap;
-use std::str::FromStr;
-use tracing::{info, warn};
+use tracing::{info, warn, error};
 
 use rvoip_session_core::SessionId;
 
 use crate::error::{CallCenterError, Result};
+use crate::agent::{Agent, AgentStatus, AgentId};
+use crate::database::DatabaseManager;
 
 /// Agent registry for managing call center agents
 ///
@@ -349,147 +350,12 @@ pub struct AgentRegistry {
     
     /// Current agent status tracking
     agent_status: HashMap<String, AgentStatus>,
+
+    /// Database manager for persistence
+    db: Option<DatabaseManager>,
 }
 
-/// Agent information and profile
-///
-/// Contains complete agent information including identification, contact details,
-/// capabilities, and configuration settings. This structure represents the
-/// authoritative agent profile within the call center system.
-#[derive(Debug, Clone)]
-pub struct Agent {
-    /// Unique agent identifier
-    pub id: String,
-    
-    /// SIP URI for agent communication
-    pub sip_uri: String,
-    
-    /// Human-readable agent name
-    pub display_name: String,
-    
-    /// List of agent skills for routing
-    pub skills: Vec<String>,
-    
-    /// Maximum number of concurrent calls
-    pub max_concurrent_calls: u32,
-    
-    /// Current agent status
-    pub status: AgentStatus,
-    
-    /// Department assignment (optional)
-    pub department: Option<String>,
-    
-    /// Phone extension (optional)
-    pub extension: Option<String>,
-}
-
-/// Agent status enumeration
-///
-/// Represents the current operational status of an agent within the call center.
-/// The status determines call routing eligibility and system behavior.
-#[derive(Debug, Clone, PartialEq)]
-pub enum AgentStatus {
-    /// Agent is available for calls
-    ///
-    /// The agent is logged in, not handling any calls, and ready to receive
-    /// new calls according to routing rules. This is the primary state for
-    /// automatic call distribution.
-    Available,
-    
-    /// Agent is busy with calls
-    ///
-    /// The agent is currently handling one or more calls. The vector contains
-    /// the session IDs of all active calls. Depending on configuration, the
-    /// agent may still be eligible for additional calls if under the maximum
-    /// concurrent call limit.
-    Busy(Vec<SessionId>),
-    
-    /// Agent is in post-call wrap-up time
-    ///
-    /// The agent has completed a call and is performing post-call activities
-    /// such as documentation, follow-up tasks, or case updates. The agent is
-    /// temporarily unavailable for new calls but will automatically return
-    /// to Available status after the wrap-up period.
-    PostCallWrapUp,
-    
-    /// Agent is offline
-    ///
-    /// The agent is not logged in or is otherwise unavailable. This is the
-    /// default status for agents who have not established a session or have
-    /// explicitly logged out.
-    Offline,
-}
-
-impl FromStr for AgentStatus {
-    type Err = String;
-    
-    /// Parse agent status from string representation
-    ///
-    /// Supports various string formats including case-insensitive matching
-    /// and common variations. This enables integration with external systems
-    /// that may use different status representations.
-    ///
-    /// # Supported Formats
-    ///
-    /// - "available", "Available", "AVAILABLE"
-    /// - "offline", "Offline", "OFFLINE"
-    /// - "postcallwrapup", "PostCallWrapUp", "post_call_wrap_up"
-    /// - "busy", "Busy", "BUSY" (creates empty call list)
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use rvoip_call_engine::agent::AgentStatus;
-    /// use std::str::FromStr;
-    /// 
-    /// # fn example() -> Result<(), String> {
-    /// let status1 = AgentStatus::from_str("available")?;
-    /// let status2 = AgentStatus::from_str("BUSY")?;
-    /// let status3 = AgentStatus::from_str("PostCallWrapUp")?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        match s {
-            "available" | "Available" | "AVAILABLE" => Ok(AgentStatus::Available),
-            "offline" | "Offline" | "OFFLINE" => Ok(AgentStatus::Offline),
-            "postcallwrapup" | "PostCallWrapUp" | "POSTCALLWRAPUP" | "post_call_wrap_up" => {
-                Ok(AgentStatus::PostCallWrapUp)
-            },
-            s if s.starts_with("busy") || s.starts_with("Busy") || s.starts_with("BUSY") => {
-                Ok(AgentStatus::Busy(Vec::new()))
-            },
-            _ => Err(format!("Unknown agent status: {}", s))
-        }
-    }
-}
-
-impl ToString for AgentStatus {
-    /// Convert agent status to string representation
-    ///
-    /// Provides a consistent string representation of agent status for
-    /// logging, external system integration, and API responses.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use rvoip_call_engine::agent::AgentStatus;
-    /// 
-    /// let status = AgentStatus::Available;
-    /// assert_eq!(status.to_string(), "available");
-    /// 
-    /// let busy_status = AgentStatus::Busy(vec![]);
-    /// assert_eq!(busy_status.to_string(), "busy(0)");
-    /// ```
-    fn to_string(&self) -> String {
-        match self {
-            AgentStatus::Available => "available".to_string(),
-            AgentStatus::Busy(calls) => format!("busy({})", calls.len()),
-            AgentStatus::PostCallWrapUp => "postcallwrapup".to_string(),
-            AgentStatus::Offline => "offline".to_string(),
-        }
-    }
-}
+// Basic types moved to types.rs
 
 impl AgentRegistry {
     /// Create a new agent registry
@@ -510,7 +376,42 @@ impl AgentRegistry {
         Self {
             active_sessions: HashMap::new(),
             agent_status: HashMap::new(),
+            db: None,
         }
+    }
+
+    /// Attach a database manager to the registry
+    pub fn with_db(mut self, db: DatabaseManager) -> Self {
+        self.db = Some(db);
+        self
+    }
+
+    /// Load agents and their states from the database
+    pub async fn load_from_db(&mut self) -> Result<()> {
+        let db = match &self.db {
+            Some(db) => db,
+            None => return Ok(()),
+        };
+
+        info!("📂 Loading agents from database...");
+        let db_agents = db.list_agents().await
+            .map_err(|e| CallCenterError::database(&format!("Failed to list agents: {}", e)))?;
+
+        for db_agent in db_agents {
+            let status = match db_agent.status.as_str() {
+                "AVAILABLE" => AgentStatus::Available,
+                "BUSY" => AgentStatus::Busy(vec![]),
+                "POSTCALLWRAPUP" => AgentStatus::PostCallWrapUp,
+                "RESERVED" => AgentStatus::Available, // Reserved is transient, treat as available for logic
+                _ => AgentStatus::Offline,
+            };
+            self.agent_status.insert(db_agent.agent_id.clone(), status);
+            // Note: active_sessions currently aren't persisted in the agents table
+            // In the future, we might want a separate sessions table
+        }
+
+        info!("✅ Loaded {} agents from database", self.agent_status.len());
+        Ok(())
     }
     
     /// Register a new agent
@@ -555,6 +456,22 @@ impl AgentRegistry {
         info!("👤 Registering agent: {} ({})", agent.display_name, agent.sip_uri);
         
         let agent_id = agent.id.clone();
+        
+        // Update database if available
+        if let Some(db) = &self.db {
+            let username = agent.sip_uri
+                .strip_prefix("sip:")
+                .and_then(|s| s.split('@').next())
+                .unwrap_or(&agent.id)
+                .to_string();
+
+            db.upsert_agent(&agent_id, &username, Some(&agent.sip_uri)).await
+                .map_err(|e| CallCenterError::database(&format!("Failed to upsert agent: {}", e)))?;
+            
+            db.update_agent_status(&agent_id, agent.status.clone()).await
+                .map_err(|e| CallCenterError::database(&format!("Failed to update initial status: {}", e)))?;
+        }
+
         self.agent_status.insert(agent_id.clone(), agent.status.clone());
         
         info!("✅ Agent registered: {}", agent_id);
@@ -594,10 +511,16 @@ impl AgentRegistry {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn update_agent_status(&mut self, agent_id: &str, status: AgentStatus) -> Result<()> {
+    pub async fn update_agent_status(&mut self, agent_id: &str, status: AgentStatus) -> Result<()> {
         info!("🔄 Agent {} status: {:?}", agent_id, status);
         
         if self.agent_status.contains_key(agent_id) {
+            // Update database if available
+            if let Some(db) = &self.db {
+                db.update_agent_status(agent_id, status.clone()).await
+                    .map_err(|e| CallCenterError::database(&format!("Failed to update status in DB: {}", e)))?;
+            }
+
             self.agent_status.insert(agent_id.to_string(), status);
             Ok(())
         } else {
@@ -637,12 +560,12 @@ impl AgentRegistry {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn set_agent_session(&mut self, agent_id: String, session_id: SessionId) -> Result<()> {
+    pub async fn set_agent_session(&mut self, agent_id: String, session_id: SessionId) -> Result<()> {
         info!("🔗 Agent {} session: {}", agent_id, session_id);
         
         if self.agent_status.contains_key(&agent_id) {
             self.active_sessions.insert(agent_id.clone(), session_id);
-            self.update_agent_status(&agent_id, AgentStatus::Available)?;
+            self.update_agent_status(&agent_id, AgentStatus::Available).await?;
             Ok(())
         } else {
             Err(CallCenterError::not_found(format!("Agent not found: {}", agent_id)))
@@ -676,11 +599,11 @@ impl AgentRegistry {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn remove_agent_session(&mut self, agent_id: &str) -> Result<()> {
+    pub async fn remove_agent_session(&mut self, agent_id: &str) -> Result<()> {
         info!("🔌 Agent {} logged out", agent_id);
         
         if self.active_sessions.remove(agent_id).is_some() {
-            self.update_agent_status(agent_id, AgentStatus::Offline)?;
+            self.update_agent_status(agent_id, AgentStatus::Offline).await?;
             Ok(())
         } else {
             Err(CallCenterError::not_found(format!("No active session for agent: {}", agent_id)))
@@ -722,11 +645,72 @@ impl AgentRegistry {
     /// # }
     /// ```
     pub async fn get_agent(&self, agent_id: &str) -> Result<Option<Agent>> {
-        // TODO: Load from database when integrated
-        warn!("🚧 get_agent not yet implemented - returning None");
-        Ok(None)
+        // Try memory first
+        if let Some(status) = self.agent_status.get(agent_id) {
+            // Ideally Agent should be stored in memory too, but currently only status is.
+            // For now, if in memory, we might still want to fetch full profile from DB if not cached.
+            if let Some(db) = &self.db {
+                match db.get_agent(agent_id).await {
+                    Ok(Some(db_agent)) => {
+                        return Ok(Some(Agent {
+                            id: db_agent.agent_id,
+                            sip_uri: db_agent.contact_uri.unwrap_or_default(),
+                            display_name: db_agent.username,
+                            skills: vec![], // TODO: Skills table
+                            max_concurrent_calls: db_agent.max_calls as u32,
+                            status: status.clone(),
+                            department: None,
+                            extension: None,
+                        }));
+                    }
+                    _ => {}
+                }
+            }
+        }
+        
+        // Fallback to database
+        if let Some(db) = &self.db {
+            match db.get_agent(agent_id).await {
+                Ok(Some(db_agent)) => {
+                    let status = match db_agent.status.as_str() {
+                        "AVAILABLE" => AgentStatus::Available,
+                        "BUSY" => AgentStatus::Busy(vec![]),
+                        "POSTCALLWRAPUP" => AgentStatus::PostCallWrapUp,
+                        _ => AgentStatus::Offline,
+                    };
+                    Ok(Some(Agent {
+                        id: db_agent.agent_id,
+                        sip_uri: db_agent.contact_uri.unwrap_or_default(),
+                        display_name: db_agent.username,
+                        skills: vec![],
+                        max_concurrent_calls: db_agent.max_calls as u32,
+                        status,
+                        department: None,
+                        extension: None,
+                    }))
+                }
+                _ => Ok(None)
+            }
+        } else {
+            Ok(None)
+        }
     }
     
+    /// Get list of available agents
+    pub fn get_available_agents(&self) -> Vec<AgentId> {
+        self.agent_status.iter()
+            .filter(|(_, status)| matches!(status, AgentStatus::Available))
+            .map(|(id, _)| AgentId(id.clone()))
+            .collect()
+    }
+
+    /// List all agents currently tracked in memory
+    pub fn list_agents(&self) -> Vec<(String, AgentStatus)> {
+        self.agent_status.iter()
+            .map(|(id, status)| (id.clone(), status.clone()))
+            .collect()
+    }
+
     /// Get agent status
     ///
     /// Retrieves the current operational status of an agent. This reflects

@@ -503,24 +503,15 @@ impl CallCenterEngine {
         .map_err(|e| CallCenterError::orchestration(&format!("Failed to create agent session: {}", e)))?;
         
         let session_id = session.id;
-        let agent_id = AgentId(agent.id.clone());
         
-        // Register agent in database
-        if let Some(db_manager) = &self.db_manager {
-            // Extract username from SIP URI
-            let username = agent.sip_uri
-                .strip_prefix("sip:")
-                .and_then(|s| s.split('@').next())
-                .unwrap_or(&agent.id)
-                .to_string();
-            
-            db_manager.upsert_agent(&agent_id.0, &username, Some(&agent.sip_uri)).await
-                .map_err(|e| CallCenterError::database(&format!("Failed to register agent in database: {}", e)))?;
-            
-            info!("✅ Agent {} registered in database", agent_id);
+        // Register in AgentRegistry (handles both memory and DB)
+        {
+            let mut registry = self.agent_registry.lock().await;
+            registry.register_agent(agent.clone()).await?;
+            registry.set_agent_session(agent.id.clone(), session_id.clone()).await?;
         }
         
-        info!("✅ Agent {} registered with session-core (session: {}, max calls: {})", 
+        info!("✅ Agent {} registered (session: {}, max calls: {})", 
               agent.id, session_id, agent.max_concurrent_calls);
         Ok(session_id)
     }
@@ -529,34 +520,13 @@ impl CallCenterEngine {
     pub async fn update_agent_status(&self, agent_id: &AgentId, new_status: AgentStatus) -> CallCenterResult<()> {
         info!("🔄 Updating agent {} status to {:?}", agent_id, new_status);
         
-        // Get current agent info from database
-        let old_status = if let Some(db_manager) = &self.db_manager {
-            match db_manager.get_agent(&agent_id.0).await {
-                Ok(Some(db_agent)) => {
-                    // Update status in database
-                    db_manager.update_agent_status(&agent_id.0, new_status.clone()).await
-                        .map_err(|e| CallCenterError::database(&format!("Failed to update agent status: {}", e)))?;
-                    
-                    // Return old status for logging
-                    match db_agent.status.as_str() {
-                        "AVAILABLE" => AgentStatus::Available,
-                        "BUSY" => AgentStatus::Busy(vec![]),
-                        "POSTCALLWRAPUP" => AgentStatus::PostCallWrapUp,
-                        _ => AgentStatus::Offline, // Default for unknown statuses
-                    }
-                }
-                Ok(None) => {
-                    return Err(CallCenterError::not_found(format!("Agent not found: {}", agent_id)));
-                }
-                Err(e) => {
-                    return Err(CallCenterError::database(&format!("Failed to get agent: {}", e)));
-                }
-            }
-        } else {
-            return Err(CallCenterError::database("Database not configured"));
-        };
+        // Use AgentRegistry
+        {
+            let mut registry = self.agent_registry.lock().await;
+            registry.update_agent_status(&agent_id.0, new_status.clone()).await?;
+        }
         
-        info!("✅ Agent {} status updated from {:?} to {:?}", agent_id, old_status, new_status);
+        info!("✅ Agent {} status updated to {:?}", agent_id, new_status);
         
         // If agent became available, check for queued calls
         if matches!(new_status, AgentStatus::Available) {
@@ -572,20 +542,24 @@ impl CallCenterEngine {
     
     /// Get detailed agent information
     pub async fn get_agent_info(&self, agent_id: &AgentId) -> Option<AgentInfo> {
-        if let Some(db_manager) = &self.db_manager {
-            match db_manager.get_agent(&agent_id.0).await {
-                Ok(Some(db_agent)) => {
-                    let contact_uri = self.config.general.agent_sip_uri(&db_agent.username);
-                    Some(AgentInfo::from_db_agent(&db_agent, contact_uri, &self.config.general))
-                }
-                Ok(None) => None,
-                Err(e) => {
-                    error!("Failed to get agent {} from database: {}", agent_id, e);
-                    None
-                }
+        let registry = self.agent_registry.lock().await;
+        match registry.get_agent(&agent_id.0).await {
+            Ok(Some(agent)) => {
+                // Construct AgentInfo from Agent
+                Some(AgentInfo {
+                    agent_id: AgentId(agent.id.clone()),
+                    session_id: SessionId(format!("session-{}", agent.id)),
+                    sip_uri: agent.sip_uri.clone(),
+                    contact_uri: agent.sip_uri.clone(), // Use SIP URI as fallback for contact
+                    status: agent.status.clone(),
+                    skills: agent.skills.clone(),
+                    current_calls: 0,
+                    max_calls: agent.max_concurrent_calls as usize,
+                    performance_score: 1.0,
+                    last_call_end: None,
+                })
             }
-        } else {
-            None
+            _ => None,
         }
     }
     

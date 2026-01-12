@@ -252,6 +252,14 @@ pub enum CallCenterError {
     Validation(String),
 }
 
+impl From<anyhow::Error> for CallCenterError {
+    fn from(err: anyhow::Error) -> Self {
+        // Map anyhow errors to Internal by default, as they are usually 
+        // unexpected errors from lower-level components.
+        Self::Internal(err.to_string())
+    }
+}
+
 impl CallCenterError {
     /// Create a new Agent error with the provided message
     ///

@@ -870,27 +870,8 @@ impl CallCenterEngine {
         
         // Fix the contact URI to include port if missing
         // When agents register with Contact: <sip:alice@127.0.0.1>, we need to add the port
-        if contact_uri.contains(':') && !contact_uri.ends_with(":5060") {
-            // Check if contact has a port (not just the sip: part)
-            let parts: Vec<&str> = contact_uri.split('@').collect();
-            if parts.len() == 2 {
-                let host_part = parts[1];
-                // Check if host part has a port
-                if !host_part.contains(':') || host_part.split(':').nth(1).unwrap_or("").is_empty() {
-                    // No port specified, need to extract from source
-                    // For now, we'll use the AOR to determine the port
-                    // In a real implementation, we'd get this from the Via header
-                    let port = if aor.contains("alice") {
-                        "5071"
-                    } else if aor.contains("bob") {
-                        "5072"
-                    } else {
-                        "5060" // Default SIP port
-                    };
-                    contact_uri = format!("{}:{}", contact_uri.trim_end_matches('>'), port).replace(">>", ">");
-                }
-            }
-        }
+        // Port logic removed: Trust the Contact header provided by the client or SBC.
+        // Hardcoding ports based on usernames (alice=5071) prevents dynamic registration.
         
         tracing::info!("Contact URI with port: {}", contact_uri);
         
@@ -906,16 +887,17 @@ impl CallCenterEngine {
             Some(expires),
             None, // User-Agent would come from SIP headers
             "unknown".to_string(), // Remote address would come from transport layer
-        )?;
+        ).await?;
         
         tracing::info!("REGISTER processed: {:?} for {}", response.status, aor);
         
         // Sync registration to database if available
         if let Some(db_manager) = &self.db_manager {
-            let username = aor.strip_prefix("sip:")
-                .and_then(|s| s.split('@').next())
-                .unwrap_or(&aor)
-                .to_string();
+            let clean_aor = aor.trim_start_matches('<').trim_end_matches('>');
+            let username = match clean_aor.parse::<rvoip_sip_core::Uri>() {
+                Ok(uri) => uri.user.as_deref().map(|u: &str| u.to_string()).unwrap_or_else(|| clean_aor.to_string()),
+                Err(_) => clean_aor.to_string(),
+            };
             
             if let Err(e) = db_manager.upsert_agent(&aor, &username, Some(&contact_uri)).await {
                 tracing::error!("Failed to sync registration to database for {}: {}", aor, e);
@@ -969,10 +951,11 @@ impl CallCenterEngine {
         if status_code == 200 && expires > 0 {
             if let Some(db_manager) = &self.db_manager {
                 // Extract username from AOR
-                let username = aor.split('@').next()
-                    .unwrap_or(&aor)
-                    .trim_start_matches("sip:")
-                    .trim_start_matches('<');
+                let clean_aor = aor.trim_start_matches('<').trim_end_matches('>');
+                let username = match clean_aor.parse::<rvoip_sip_core::Uri>() {
+                    Ok(uri) => uri.user.as_deref().map(|u: &str| u.to_string()).unwrap_or_else(|| clean_aor.to_string()),
+                    Err(_) => clean_aor.to_string(),
+                };
                 
                 // Update or insert agent in database
                 match db_manager.upsert_agent(&username, &username, Some(&contact_uri)).await {
@@ -987,10 +970,11 @@ impl CallCenterEngine {
         } else if status_code == 200 && expires == 0 {
             // Handle de-registration - mark agent as offline
             if let Some(db_manager) = &self.db_manager {
-                let username = aor.split('@').next()
-                    .unwrap_or(&aor)
-                    .trim_start_matches("sip:")
-                    .trim_start_matches('<');
+                let clean_aor = aor.trim_start_matches('<').trim_end_matches('>');
+                let username = match clean_aor.parse::<rvoip_sip_core::Uri>() {
+                    Ok(uri) => uri.user.as_deref().map(|u: &str| u.to_string()).unwrap_or_else(|| clean_aor.to_string()),
+                    Err(_) => clean_aor.to_string(),
+                };
                 
                 // Update database status to offline
                 match db_manager.mark_agent_offline(&username).await {
