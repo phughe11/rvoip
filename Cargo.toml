@@ -198,6 +198,7 @@ fastrand = "2.0"
 tracing-appender = "0.2"
 env_logger = "0.11"
 criterion = { version = "0.5", features = ["html_reports"] }
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite", "chrono", "uuid"] }
 
 # 🔧 Optimization Profiles for Binary Size Reduction
 

@@ -1357,7 +1357,6 @@ impl Clone for SessionDialogCoordinator {
             dialog_api: Arc::clone(&self.dialog_api),
             registry: Arc::clone(&self.registry),
             handler: self.handler.clone(),
-            event_processor: self.event_processor.clone(),
             dialog_to_session: Arc::clone(&self.dialog_to_session),
             session_to_dialog: Arc::clone(&self.session_to_dialog),
             incoming_sdp_offers: Arc::clone(&self.incoming_sdp_offers),
@@ -1365,6 +1364,7 @@ impl Clone for SessionDialogCoordinator {
             fromtag_to_session: Arc::clone(&self.fromtag_to_session),
             fromuri_to_session: Arc::clone(&self.fromuri_to_session),
             transfer_handler,
+            event_processor: Arc::clone(&self.event_processor),
         }
     }
 }
